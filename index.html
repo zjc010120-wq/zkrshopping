@@ -6,8 +6,8 @@
 <title>代購報價計算器</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="韓國 ⇄ 台灣代購報價：即時匯率、成本、利潤、稅金一次算清楚">
-<meta name="theme-color" content="#2446B8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E1220" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0F12" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,248 +16,294 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* Layout: phone = bottom tab bar + sticky price bar; tablet = left icon rail; desktop (≥1200) = labelled sidebar + form | sticky quote panel */
+/* Minimal white UI · slate blue #455068 + black.
+   Layout: phone = bottom tab bar + sticky price bar; tablet = left icon rail; desktop (≥1200) = labelled sidebar + form | sticky quote panel */
 :root{
-  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F2F4F8; --line:#D9DEE8;
-  --fg:#18203A; --muted:#5E6782; --accent:#2446B8; --accent-ink:#FFFFFF; --accent-soft:#E6ECFB;
-  --red:#C8283C; --good:#13805A; --good-soft:#E2F4EC; --warn:#B4600B; --warn-soft:#FCEFDD;
-  --seg1:#2446B8; --seg2:#6C8BEA; --seg3:#9DB0E8; --seg4:#C9D3EE; --seg5:#E3A23B; --seg6:#13805A;
-  --badge:rgba(255,255,255,.18);
-  --shadow:0 1px 2px rgba(24,32,58,.07),0 4px 16px rgba(24,32,58,.07);
-  --f-body:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
-  --f-num:"Space Grotesk","Noto Sans TC",ui-sans-serif,system-ui,sans-serif;
-  --r:14px; --nav-h:62px; --rail:0px;
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F6F8; --surface-3:#ECEEF2; --line:#E7E9ED;
+  --fg:#111318; --muted:#6B7180; --faint:#9AA0AC;
+  --accent:#455068; --accent-ink:#FFFFFF; --accent-soft:#EEF0F4;
+  --ink:#111318; --ink-fg:#FFFFFF;
+  --hero:#111318; --hero-fg:#FFFFFF; --hero-mute:rgba(255,255,255,.62); --hero-line:rgba(255,255,255,.12);
+  --hero-good:#86D9B0; --hero-bad:#FF9BA6;
+  --red:#B4232F; --good:#22795A; --good-soft:#E7F3EE; --warn:#9A5B12; --warn-soft:#F7EEDF;
+  --seg1:#111318; --seg2:#455068; --seg3:#7C8598; --seg4:#B2B8C4; --seg5:#D9DCE2; --seg6:#22795A;
+  --f-body:"Inter","Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-num:"Inter","Noto Sans TC",ui-sans-serif,system-ui,sans-serif;
+  --r:18px; --r-sm:12px; --nav-h:64px; --rail:0px;
   padding-top:env(safe-area-inset-top,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E1220; --surface:#171C2E; --surface-2:#1F2539; --line:#2C3450;
-  --fg:#E8ECF6; --muted:#9AA3BE; --accent:#7D98F2; --accent-ink:#0E1220; --accent-soft:#232C4A;
-  --red:#F0677A; --good:#4CC896; --good-soft:#163428; --warn:#F0AE5A; --warn-soft:#3A2A14;
-  --seg1:#7D98F2; --seg2:#5670CC; --seg3:#3F519A; --seg4:#2F3B66; --seg5:#E3A23B; --seg6:#4CC896;
-  --badge:rgba(14,18,32,.18);
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}}
+  --bg:#0E0F12; --surface:#15171B; --surface-2:#1C1E23; --surface-3:#25282E; --line:#26292F;
+  --fg:#F1F2F4; --muted:#9BA1AD; --faint:#6E7480;
+  --accent:#AEB8CF; --accent-ink:#0E0F12; --accent-soft:#232731;
+  --ink:#F1F2F4; --ink-fg:#0E0F12;
+  --hero:#232835; --hero-fg:#FFFFFF; --hero-mute:rgba(255,255,255,.6); --hero-line:rgba(255,255,255,.1);
+  --red:#F08A95; --good:#6CCB9F; --good-soft:#16281F; --warn:#E2B06A; --warn-soft:#2E2414;
+  --seg1:#F1F2F4; --seg2:#AEB8CF; --seg3:#77819A; --seg4:#4A5164; --seg5:#33384A; --seg6:#6CCB9F;
+  color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1220; --surface:#171C2E; --surface-2:#1F2539; --line:#2C3450;
-  --fg:#E8ECF6; --muted:#9AA3BE; --accent:#7D98F2; --accent-ink:#0E1220; --accent-soft:#232C4A;
-  --red:#F0677A; --good:#4CC896; --good-soft:#163428; --warn:#F0AE5A; --warn-soft:#3A2A14;
-  --seg1:#7D98F2; --seg2:#5670CC; --seg3:#3F519A; --seg4:#2F3B66; --seg5:#E3A23B; --seg6:#4CC896;
-  --badge:rgba(14,18,32,.18);
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}
+  --bg:#0E0F12; --surface:#15171B; --surface-2:#1C1E23; --surface-3:#25282E; --line:#26292F;
+  --fg:#F1F2F4; --muted:#9BA1AD; --faint:#6E7480;
+  --accent:#AEB8CF; --accent-ink:#0E0F12; --accent-soft:#232731;
+  --ink:#F1F2F4; --ink-fg:#0E0F12;
+  --hero:#232835; --hero-fg:#FFFFFF; --hero-mute:rgba(255,255,255,.6); --hero-line:rgba(255,255,255,.1);
+  --red:#F08A95; --good:#6CCB9F; --good-soft:#16281F; --warn:#E2B06A; --warn-soft:#2E2414;
+  --seg1:#F1F2F4; --seg2:#AEB8CF; --seg3:#77819A; --seg4:#4A5164; --seg5:#33384A; --seg6:#6CCB9F;
+  color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
-.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 a{color:var(--accent)}
 
 /* ---------- app shell ---------- */
-.nav{position:fixed;z-index:30;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);
+.nav{position:fixed;z-index:30;left:0;right:0;bottom:0;display:flex;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .nav .brand{display:none}
-.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:var(--nav-h);text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:500}
-.nav a svg{width:24px;height:24px}
-.nav a[aria-current="page"]{color:var(--accent)}
-.nav a[aria-current="page"] .ic{background:var(--accent-soft)}
-.nav .ic{display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background .2s}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:var(--nav-h);text-decoration:none;color:var(--faint);font-size:11px;font-weight:500}
+.nav a svg{width:22px;height:22px}
+.nav a[aria-current="page"]{color:var(--fg)}
+.nav .ic{display:grid;place-items:center;width:48px;height:28px;border-radius:999px;transition:background .2s}
+.nav a[aria-current="page"] .ic{background:var(--surface-2)}
 .content{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
-.wrap{max-width:1180px;margin:0 auto;padding-block:12px 28px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1160px;margin:0 auto;padding-block:8px 32px;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 
-.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
-.appbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 10px;flex-wrap:wrap}
-.appbar h1{font-size:20px;margin:0;line-height:1.2}
-.appbar .sub{color:var(--muted);font-size:12.5px;margin:0}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.appbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 14px;flex-wrap:wrap}
+.appbar h1{font-size:24px;font-weight:700;margin:0;line-height:1.2;letter-spacing:-.01em}
+.appbar .sub{color:var(--muted);font-size:13px;margin:2px 0 0}
 .appbar .ttl{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{width:34px;height:34px;border-radius:10px;flex:none}
+.logo{width:32px;height:32px;border-radius:9px;flex:none}
 
 @media (min-width:768px){
-  :root{--rail:88px}
-  .nav{top:0;right:auto;width:var(--rail);flex-direction:column;justify-content:flex-start;gap:6px;border-top:0;border-right:1px solid var(--line);
-    padding-top:calc(16px + env(safe-area-inset-top,0px));padding-right:0}
-  .nav a{flex:none;height:68px}
-  .nav .brand{display:flex;justify-content:center;margin-bottom:10px}
+  :root{--rail:84px}
+  .nav{top:0;right:auto;width:var(--rail);flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;
+    padding-top:calc(20px + env(safe-area-inset-top,0px));padding-right:0}
+  .nav a{flex:none;height:66px}
+  .nav .brand{display:flex;justify-content:center;margin-bottom:14px}
   .content{margin-left:calc(var(--rail) + env(safe-area-inset-left,0px));padding-bottom:0}
-  .wrap{padding-left:max(24px,0px);padding-right:max(24px,env(safe-area-inset-right,0px))}
+  .wrap{padding-left:32px;padding-right:max(32px,env(safe-area-inset-right,0px))}
+  .appbar .wrap{padding-block:28px 18px}
+  .appbar h1{font-size:28px}
 }
 @media (min-width:1200px){
-  :root{--rail:232px}
-  .nav{padding-left:calc(12px + env(safe-area-inset-left,0px));padding-right:12px}
-  .nav .brand{justify-content:flex-start;align-items:center;gap:10px;padding:0 8px 10px;font-weight:700;font-size:15px}
-  .nav a{flex-direction:row;justify-content:flex-start;gap:12px;height:48px;padding:0 8px;border-radius:12px;font-size:14.5px}
-  .nav a[aria-current="page"]{background:var(--accent-soft)}
+  :root{--rail:224px}
+  .nav{padding-left:calc(14px + env(safe-area-inset-left,0px));padding-right:14px;background:var(--bg)}
+  .nav .brand{justify-content:flex-start;align-items:center;gap:10px;padding:0 10px 18px;font-weight:700;font-size:15px}
+  .nav a{flex-direction:row;justify-content:flex-start;gap:10px;height:44px;padding:0 10px;border-radius:10px;font-size:14.5px;color:var(--muted)}
+  .nav a:hover{background:var(--surface-2)}
+  .nav a[aria-current="page"]{background:var(--surface-2);color:var(--fg);font-weight:600}
   .nav a[aria-current="page"] .ic{background:transparent}
-  .nav .ic{width:28px}
-  .nav .navfoot{margin-top:auto;padding:12px 8px calc(16px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:12px}
+  .nav .ic{width:24px}
+  .nav .navfoot{margin-top:auto;padding:12px 10px calc(18px + env(safe-area-inset-bottom,0px));color:var(--faint);font-size:12px;line-height:1.6}
 }
 .navfoot{display:none}
 .lbl-wide{display:none}
-@media (min-width:1200px){.lbl-wide{display:inline}}
-@media (min-width:1200px){.navfoot{display:block}}
+@media (min-width:1200px){.lbl-wide{display:inline}.navfoot{display:block}}
 
 /* ---------- shared pieces ---------- */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:0 1px 3px rgba(24,32,58,.05)}
-.stack{display:flex;flex-direction:column;gap:14px}
-.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 12px;flex-wrap:wrap}
-.sec-h h2{font-size:14px;margin:0;letter-spacing:.04em}
-.sec-h span{font-size:12px;color:var(--muted)}
-.seg{display:inline-flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px}
-.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:500;color:var(--muted);min-height:40px;white-space:nowrap;flex:1}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
-.btn{border:0;border-radius:10px;padding:0 16px;min-height:46px;font-weight:500;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
-.btn-pri{background:var(--accent);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+.sec-h h2{font-size:16px;font-weight:600;margin:0;letter-spacing:-.005em}
+.sec-h span{font-size:12.5px;color:var(--faint)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 14px;border-radius:9px;cursor:pointer;font-weight:500;font-size:14px;color:var(--muted);min-height:38px;white-space:nowrap;flex:1;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(17,19,24,.08),0 0 0 1px var(--line)}
+.btn{border:0;border-radius:12px;padding:0 18px;min-height:48px;font-weight:600;font-size:14.5px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;transition:opacity .15s,background .15s}
+.btn-pri{background:var(--ink);color:var(--ink-fg)}
+.btn-pri:hover{opacity:.88}
 .btn-ghost{background:var(--surface-2);color:var(--fg)}
 .btn-line{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.btn-line:hover{background:var(--surface-2)}
 .btn-danger{background:var(--surface);color:var(--red);border:1px solid var(--line)}
-.btn.sm{min-height:38px;padding:0 12px;font-size:13.5px}
+.btn.sm{min-height:38px;padding:0 14px;font-size:13.5px;border-radius:10px}
 .btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.55;cursor:default}
-.pill{font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:default}
+.icon-btn{border:0;background:transparent;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:none}
+.icon-btn:hover{background:var(--surface-3);color:var(--fg)}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn:disabled{opacity:.4}
+.icon-btn.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pill{font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--surface-3);color:var(--muted);white-space:nowrap}
 .pill.live{background:var(--good-soft);color:var(--good)}
 .pill.stale{background:var(--warn-soft);color:var(--warn)}
-.hint{font-size:12px;color:var(--muted);margin-top:5px}
-.grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.hint{font-size:12.5px;color:var(--faint);margin-top:6px}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .grid .span2{grid-column:1/-1}
-label.lb{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:500}
-.field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;transition:border-color .15s}
-.field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.field input{flex:1;min-width:0;border:0;background:transparent;padding:10px 12px;font-size:16px;font-family:var(--f-num);font-variant-numeric:tabular-nums;outline:none;min-height:46px}
-.field input.txt{font-family:var(--f-body)}
-.field .unit{display:flex;align-items:center;padding:0 12px;color:var(--muted);font-size:13px;background:var(--surface-2);border-left:1px solid var(--line);white-space:nowrap}
-.field .pre{border-left:0;border-right:1px solid var(--line)}
-.step{display:flex}
-.step button{width:42px;border:0;border-left:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:18px;color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;min-height:34px}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;min-height:46px;font-size:16px}
-.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;min-height:52px}
-.toggle b{font-weight:500;font-size:14px}
-.toggle small{display:block;color:var(--muted);font-size:12px}
+label.lb,.lb{display:block;font-size:13px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.field{display:flex;align-items:stretch;border:1px solid transparent;border-radius:var(--r-sm);background:var(--surface-2);overflow:hidden;transition:border-color .15s,background .15s,box-shadow .15s}
+.field:hover{background:var(--surface-3)}
+.field:focus-within{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field input{flex:1;min-width:0;border:0;background:transparent;padding:10px 14px;font-size:16px;font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:500;outline:none;min-height:48px}
+.field input.txt{font-family:var(--f-body);font-weight:400}
+.field input::placeholder{color:var(--faint);font-weight:400}
+.field .unit{display:flex;align-items:center;padding:0 14px 0 0;color:var(--faint);font-size:13.5px;white-space:nowrap}
+.field .pre{padding:0 0 0 14px}
+.step{display:flex;align-items:center;gap:4px;padding-right:6px}
+.step button{width:36px;height:36px;border:0;border-radius:9px;background:var(--surface);cursor:pointer;font-size:17px;color:var(--fg);box-shadow:0 0 0 1px var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 14px;font-size:13.5px;font-weight:500;cursor:pointer;min-height:36px;color:var(--muted);font-family:var(--f-num)}
+.chip:hover{color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ink-fg)}
+select.sel{width:100%;border:1px solid transparent;border-radius:var(--r-sm);background:var(--surface-2);padding:10px 14px;min-height:48px;font-size:16px;appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 15px) 21px;background-size:5px 5px;background-repeat:no-repeat}
+select.sel:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:var(--r-sm);background:var(--surface-2);cursor:pointer;min-height:56px}
+.toggle b{font-weight:500;font-size:14.5px}
+.toggle small{display:block;color:var(--faint);font-size:12.5px}
 .sw{position:relative;width:46px;height:28px;flex:none}
 .sw input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
-.sw i{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .2s}
-.sw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
-.sw input:checked+i{background:var(--accent)}
+.sw i{position:absolute;inset:0;border-radius:999px;background:var(--seg4);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked+i{background:var(--ink)}
 .sw input:checked+i::after{transform:translateX(18px)}
+:root[data-theme="dark"] .sw input:checked+i::after{background:var(--ink-fg)}
 .sw input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
-.empty{color:var(--muted);font-size:13.5px;text-align:center;padding:28px 12px}
+.empty{color:var(--faint);font-size:14px;text-align:center;padding:48px 12px}
+
+/* disclosure */
+details.more{border-top:1px solid var(--line);margin-top:20px}
+details.more > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0 2px;min-height:48px}
+details.more > summary::-webkit-details-marker{display:none}
+details.more > summary .t{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
+details.more > summary .t::after{content:"";width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+details.more[open] > summary .t::after{transform:translateY(2px) rotate(225deg)}
+details.more > summary .s{font-size:12.5px;color:var(--faint);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.more .in{padding-top:16px}
+details.more > summary .t{white-space:nowrap}
+@media (max-width:599px){details.more > summary{flex-wrap:wrap;gap:2px 12px}details.more > summary .s{flex-basis:100%;text-align:left;white-space:normal}}
 
 /* ---------- calculator ---------- */
 .dirseg{width:100%}
 @media (min-width:600px){.dirseg{width:auto}}
-.calc{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
-@media (min-width:1024px){.calc{grid-template-columns:minmax(0,1fr) 380px;align-items:start}
-  .quote{position:sticky;top:calc(76px + env(safe-area-inset-top,0px))}}
-@media (min-width:1360px){.calc{grid-template-columns:minmax(0,1fr) 420px}}
+.calc{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1024px){.calc{grid-template-columns:minmax(0,1fr) 380px;align-items:start;gap:24px}
+  .quote{position:sticky;top:calc(96px + env(safe-area-inset-top,0px))}}
+@media (min-width:1360px){.calc{grid-template-columns:minmax(0,1fr) 410px}}
 
-.rate{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);background:var(--accent-soft);border-color:transparent}
-@media (min-width:600px){.rate{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
-.rate .eq{font-size:13.5px;color:var(--muted)}
-.rate .eq b{color:var(--fg)}
-.rate .span-all{grid-column:1/-1}
-.rate-side{display:flex;flex-direction:column;gap:8px}
-@media (min-width:600px){.rate-side{align-items:flex-end}}
-.rate-btns{display:flex;gap:8px}
-.rate-btns .btn{flex:1;background:var(--surface)}
-.rate-ctl{display:flex;align-items:center;gap:8px}
-.rate-ctl .field{flex:1;min-width:120px}
-.srcs{border-top:1px solid var(--line);padding-top:8px;font-size:13px}
-.srcs summary{cursor:pointer;color:var(--accent);font-weight:500;min-height:32px;display:flex;align-items:center}
-.srcs ul{list-style:none;margin:6px 0 0;padding:0}
-.srcs li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
-.srcs li small{color:var(--muted)}
-.srcs li.off{color:var(--muted);text-decoration:line-through}
+.rate{background:var(--surface-2);border-radius:var(--r);padding:6px 8px 6px 18px}
+.rate-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px}
+.rate-main{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.rate-main .lb2{font-size:13px;color:var(--muted);font-weight:500}
+.rate-main .v{font-size:15px;font-weight:600}
+.rate-tools{display:flex;align-items:center;gap:2px}
+.rate details{border-top:1px solid var(--line);margin:4px 10px 6px 0}
+.rate summary{list-style:none;cursor:pointer;font-size:13px;color:var(--muted);padding:10px 0;display:flex;justify-content:space-between;align-items:center}
+.rate summary::-webkit-details-marker{display:none}
+.rate summary::after{content:"＋";color:var(--faint)}
+.rate details[open] summary::after{content:"－"}
+.srcs ul{list-style:none;margin:0;padding:0;font-size:13px}
+.srcs li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.srcs li small{color:var(--faint)}
+.srcs li.off{color:var(--faint);text-decoration:line-through}
+.srcs li:last-child{border-bottom:0}
+.rate-ctl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 4px}
+.rate-ctl{display:flex;align-items:center;gap:8px;flex:1;min-width:200px}
+.rate-ctl .field{flex:1;background:var(--surface)}
+.srcs .note{font-size:12px;color:var(--faint);margin:10px 0 4px;line-height:1.6}
 
+.mrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.mrow .field{width:128px;flex:none}
+@media (max-width:599px){.mrow{flex-direction:column;align-items:stretch}.mrow .field{width:100%}.mrow .chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.chip{padding:0 4px}}
+.prow2{margin-top:18px}
 .plist{display:flex;flex-wrap:wrap;gap:8px}
 .pchip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
 .pchip button{border:0;background:transparent;cursor:pointer;min-height:36px}
-.pchip .load{padding:0 6px 0 14px;font-size:13.5px}
-.pchip .load small{color:var(--muted);margin-left:6px;font-size:11.5px}
-.pchip .del{padding:0 12px 0 6px;color:var(--muted);font-size:16px}
+.pchip .load{padding:0 4px 0 14px;font-size:13.5px;font-weight:500}
+.pchip .load small{color:var(--faint);margin-left:6px;font-size:12px;font-weight:400}
+.pchip .del{padding:0 12px 0 6px;color:var(--faint);font-size:16px}
 .pchip .del:hover{color:var(--red)}
-.preset-row{display:flex;gap:8px;margin-top:12px}
+.preset-row{display:flex;gap:8px}
 .preset-row .field{flex:1}
 
-.quote{display:flex;flex-direction:column;gap:14px}
-.hero{background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
-.hero .k{font-size:12.5px;opacity:.85;letter-spacing:.06em}
-.hero .price{font-size:clamp(34px,9vw,46px);font-weight:700;line-height:1.1;margin:4px 0 6px;overflow-wrap:anywhere}
-.hero .sub{font-size:12.5px;opacity:.85}
+.quote{display:flex;flex-direction:column;gap:16px}
+.hero{background:var(--hero);color:var(--hero-fg);border-radius:var(--r);padding:24px}
+.hero .k{font-size:13px;color:var(--hero-mute);font-weight:500}
+.hero .price{font-size:clamp(38px,10vw,50px);font-weight:700;line-height:1.05;margin:6px 0 8px;overflow-wrap:anywhere;letter-spacing:-.03em}
+.hero .sub{font-size:13px;color:var(--hero-mute)}
 .hero .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.badge{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--badge)}
-.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.kpi .k{font-size:12px;color:var(--muted)}
-.kpi .v{font-size:20px;font-weight:700;margin-top:2px}
+.badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--hero-line);color:var(--hero-fg)}
+.hero-kpis{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;padding-top:18px;border-top:1px solid var(--hero-line)}
+.hero-kpis .v{font-size:22px;font-weight:700;margin-top:2px;letter-spacing:-.02em}
+.hero-kpis .k2{font-size:12px;color:var(--hero-mute);margin-top:4px}
+.hero .good{color:var(--hero-good)} .hero .bad{color:var(--hero-bad)}
 .good{color:var(--good)} .bad{color:var(--red)}
-.status{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;margin-top:6px}
-.status.ok{background:var(--good-soft);color:var(--good)}
-.status.low{background:var(--warn-soft);color:var(--warn)}
-.status.neg{background:var(--warn-soft);color:var(--red)}
-.bar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:4px 0 14px}
-.bar span{display:block;height:100%;transition:width .3s}
+.status{display:inline-block;font-size:11.5px;font-weight:500;padding:2px 9px;border-radius:999px;margin-top:6px;background:var(--hero-line);color:var(--hero-fg)}
+.status.low,.status.neg{background:rgba(255,190,110,.18);color:#FFD49A}
+.bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:0 0 14px;gap:2px}
+.bar span{display:block;height:100%;transition:width .3s;border-radius:2px}
 .rows{list-style:none;margin:0;padding:0}
-.rows li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
-.rows li:last-child{border-bottom:0}
-.rows .nm{display:flex;align-items:center;gap:8px;min-width:0}
-.rows .dot{width:9px;height:9px;border-radius:3px;flex:none}
-.rows .nm small{color:var(--muted);font-size:12px}
+.rows li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;font-size:14px}
+.rows .nm{display:flex;align-items:center;gap:10px;min-width:0}
+.rows .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.rows .nm small{color:var(--faint);font-size:12px;margin-left:2px}
 .rows .amt{font-weight:600;white-space:nowrap}
-.rows li.total{border-top:1px solid var(--line);border-bottom:0;margin-top:4px;padding-top:12px;font-weight:700}
+.rows li.total{border-top:1px solid var(--line);margin-top:6px;padding-top:14px;font-weight:600}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.copybox textarea{width:100%;min-height:104px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);font-size:13.5px;line-height:1.6;color:var(--fg)}
+.copybox textarea{width:100%;min-height:118px;resize:vertical;border:0;border-radius:var(--r-sm);padding:12px 14px;background:var(--surface-2);font-size:13.5px;line-height:1.65;color:var(--fg);outline:none}
+.copybox textarea:focus{box-shadow:0 0 0 2px var(--accent)}
 
 .mbar{position:fixed;z-index:25;left:0;right:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);
-  box-shadow:0 -6px 24px rgba(24,32,58,.08);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mbar .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.mbar .k{font-size:11.5px;color:var(--muted)}
-.mbar .p{font-size:22px;font-weight:700;line-height:1.1}
-.mbar .pf{font-size:12px}
-#v-calc > .wrap{padding-bottom:96px}
-@media (min-width:768px){.mbar{left:calc(var(--rail) + env(safe-area-inset-left,0px));bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
-@media (min-width:1024px){.mbar{display:none}#v-calc > .wrap{padding-bottom:28px}}
+  padding-block:12px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.mbar .in{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mbar .k{font-size:12px;color:var(--faint)}
+.mbar .p{font-size:24px;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.mbar .pf{font-size:12.5px;font-weight:500}
+.mbar .right{display:flex;align-items:center;gap:12px}
+#v-calc > .wrap{padding-bottom:104px}
+@media (min-width:768px){.mbar{left:calc(var(--rail) + env(safe-area-inset-left,0px));bottom:0;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}}
+@media (min-width:1024px){.mbar{display:none}#v-calc > .wrap{padding-bottom:40px}}
 
 /* ---------- history ---------- */
 .hist-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .hist-tools .field{flex:1;min-width:200px}
-.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.summary .kpi .v{font-size:18px}
-.hlist{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:var(--r)}
+.summary .kpi{padding:16px 18px;border-left:1px solid var(--line)}
+.summary .kpi:first-child{border-left:0}
+.kpi .k{font-size:12.5px;color:var(--faint)}
+.summary .kpi .v{font-size:20px;font-weight:700;margin-top:2px;letter-spacing:-.02em}
+@media (max-width:420px){.summary .kpi{padding:14px 12px}.summary .kpi .v{font-size:16px}}
+.hlist{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
 @media (min-width:900px){.hlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (min-width:1500px){.hlist{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.hitem{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.hitem{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
 .hitem .t{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.hitem h3{margin:0;font-size:15px;overflow-wrap:anywhere}
-.hitem .meta{font-size:12px;color:var(--muted)}
-.hitem .p{font-size:20px;font-weight:700;white-space:nowrap}
-.hitem .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.hitem h3{margin:0;font-size:15.5px;font-weight:600;overflow-wrap:anywhere}
+.hitem .meta{font-size:12.5px;color:var(--faint)}
+.hitem .p{font-size:22px;font-weight:700;white-space:nowrap;letter-spacing:-.02em}
+.hitem .tag{font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
 .hitem .b{display:flex;gap:8px;flex-wrap:wrap}
 .hitem .b .btn{flex:1}
 
 /* ---------- settings ---------- */
-.prefs{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);max-width:760px}
-.prow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed var(--line)}
-.prow:last-child{border-bottom:0}
+.prefs{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);max-width:720px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}
+.prow:first-of-type{padding-top:0}
+.prow:last-child{border-bottom:0;padding-bottom:0}
 .prow .d{min-width:0}
 .prow .d b{display:block;font-weight:500;font-size:14.5px}
-.prow .d small{color:var(--muted);font-size:12.5px}
+.prow .d small{color:var(--faint);font-size:12.5px}
 .steps{margin:8px 0 0;padding-left:20px;font-size:14px;color:var(--fg)}
 .steps li{margin:4px 0}
-.install-card{background:var(--accent-soft);border-color:transparent}
-.banner{display:flex;align-items:center;gap:12px;justify-content:space-between;background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:13.5px;flex-wrap:wrap}
+.install-card{background:var(--surface-2);border-color:transparent}
+.banner{display:flex;align-items:center;gap:12px;justify-content:space-between;background:var(--surface-2);border-radius:var(--r-sm);padding:10px 12px 10px 16px;font-size:13.5px;flex-wrap:wrap}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:50;display:flex;gap:14px;align-items:center;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
-.toast button{border:0;background:transparent;color:var(--bg);text-decoration:underline;cursor:pointer;font-weight:700;min-height:32px}
-@media (min-width:768px){.toast{left:calc(50% + var(--rail)/2);bottom:96px}}
-@media (min-width:1024px){.toast{bottom:24px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--ink-fg);padding:11px 18px;border-radius:12px;font-size:13.5px;z-index:50;display:flex;gap:14px;align-items:center;width:max-content;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(17,19,24,.18)}
+.toast button{white-space:nowrap;border:0;background:transparent;color:var(--ink-fg);text-decoration:underline;cursor:pointer;font-weight:600;min-height:32px}
+@media (min-width:768px){.toast{left:calc(50% + var(--rail)/2);bottom:100px}}
+@media (min-width:1024px){.toast{bottom:28px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -274,39 +320,39 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
 <!-- ================= 計算 ================= -->
 <section class="view" id="v-calc" aria-labelledby="calcH">
   <header class="appbar"><div class="wrap">
-    <div class="ttl"><div><h1 id="calcH">報價計算</h1><p class="sub">韓國 ⇄ 台灣 · 成本、利潤、稅金一次算清楚</p></div></div>
+    <div class="ttl"><h1 id="calcH">報價計算</h1></div>
     <div class="seg dirseg" role="group" aria-label="報價方向">
-      <button type="button" data-dir="k2t" aria-pressed="true">🇰🇷 韓貨賣台灣</button>
-      <button type="button" data-dir="t2k" aria-pressed="false">🇹🇼 台貨賣韓國</button>
+      <button type="button" data-dir="k2t" aria-pressed="true">韓貨賣台灣</button>
+      <button type="button" data-dir="t2k" aria-pressed="false">台貨賣韓國</button>
     </div>
   </div></header>
   <div class="wrap">
-    <div class="banner" id="installBanner" hidden style="margin-bottom:14px">
-      <span>把計算器加到主畫面，像 App 一樣一鍵開啟。</span>
+    <div class="banner" id="installBanner" hidden style="margin-bottom:16px">
+      <span>加到主畫面，像 App 一樣一鍵開啟</span>
       <span style="display:flex;gap:8px"><button type="button" class="btn sm btn-pri" data-install>安裝</button><button type="button" class="btn sm btn-line" id="bannerClose">稍後</button></span>
     </div>
     <div class="calc">
       <div class="stack">
-        <section class="card rate" aria-labelledby="rateH">
-          <div>
-            <div class="sec-h" style="margin-bottom:4px"><h2 id="rateH">匯率</h2><span class="pill" id="rateStatus">抓取中…</span></div>
-            <div class="eq">NT$1 ＝ <b class="num" id="rateEq">₩41.5</b>　·　₩1,000 ＝ <b class="num" id="rateEq2">NT$24.10</b></div>
-            <div class="hint" id="rateMeta"></div>
-          </div>
-          <div class="rate-side">
-            <div class="rate-btns">
-              <button type="button" class="btn sm btn-line" id="rateRefresh">↻ 重新抓取</button>
-              <button type="button" class="btn sm btn-line" id="rateModeBtn">手動輸入</button>
+        <section class="rate" aria-labelledby="rateH">
+          <div class="rate-top">
+            <div class="rate-main">
+              <span class="lb2" id="rateH">匯率</span>
+              <span class="v num">NT$1 ＝ <span id="rateEq">₩41.5</span></span>
+              <span class="pill" id="rateStatus">抓取中…</span>
             </div>
-            <div class="rate-ctl" id="manualBox" hidden>
-              <span style="font-size:13px;color:var(--muted)">NT$1 =</span>
-              <div class="field"><input id="rate" inputmode="decimal" autocomplete="off" aria-label="1 台幣可換多少韓元"><span class="unit">₩</span></div>
-            </div>
+            <button type="button" class="icon-btn" id="rateRefresh" aria-label="重新抓取匯率" title="重新抓取"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
           </div>
-          <details class="srcs span-all">
-            <summary>查看各來源匯率</summary>
+          <details class="srcs">
+            <summary><span><span id="rateMeta"></span></span></summary>
             <ul id="srcList"></ul>
-            <p class="hint">以上為國際市場中間價，銀行賣出價與刷卡匯率通常差 1–2%，可用「營運成本 %」吸收。<a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" target="_blank" rel="noopener">對照台灣銀行牌告 ↗</a></p>
+            <div class="rate-ctl-row">
+              <button type="button" class="btn sm btn-line" id="rateModeBtn">手動輸入</button>
+              <div class="rate-ctl" id="manualBox" hidden>
+                <span style="font-size:13px;color:var(--muted)">NT$1 =</span>
+                <div class="field"><input id="rate" inputmode="decimal" autocomplete="off" aria-label="1 台幣可換多少韓元"><span class="unit">₩</span></div>
+              </div>
+            </div>
+            <p class="note">₩1,000 ＝ <b class="num" id="rateEq2">NT$24.10</b>。以上為國際市場中間價，銀行與刷卡匯率通常差 1–2%，可用「營運成本」吸收。<a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" target="_blank" rel="noopener">台灣銀行牌告 ↗</a></p>
           </details>
         </section>
 
@@ -325,7 +371,6 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
             <div>
               <label class="lb" for="qty">數量</label>
               <div class="field"><input id="qty" inputmode="numeric" autocomplete="off"><span class="step"><button type="button" data-step="-1" aria-label="減少數量">−</button><button type="button" data-step="1" aria-label="增加數量">＋</button></span></div>
-              <div class="hint">運費以整筆訂單計算</div>
             </div>
             <div class="span2">
               <label class="lb" for="customer">客人（選填）</label>
@@ -334,51 +379,50 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
           </div>
         </section>
 
-        <section class="card" aria-labelledby="costH">
-          <div class="sec-h"><h2 id="costH">費用</h2><span>運費以整筆計，費率以 % 計</span></div>
-          <div class="grid">
-            <div><label class="lb" for="ship1" id="ship1Lb">國際運費</label>
-              <div class="field"><span class="unit pre cur2">NT$</span><input id="ship1" inputmode="decimal" autocomplete="off"></div></div>
-            <div><label class="lb" for="ship2" id="ship2Lb">境內運費</label>
-              <div class="field"><span class="unit pre cur2">NT$</span><input id="ship2" inputmode="decimal" autocomplete="off"></div></div>
-            <div><label class="lb" for="svc">代購服務費</label>
-              <div class="field"><input id="svc" inputmode="decimal" autocomplete="off"><span class="unit">% 商品</span></div></div>
-            <div><label class="lb" for="ops">營運成本（刷卡、包材、雜支）</label>
-              <div class="field"><input id="ops" inputmode="decimal" autocomplete="off"><span class="unit">% 小計</span></div></div>
-          </div>
-        </section>
-
         <section class="card" aria-labelledby="profitH">
-          <div class="sec-h"><h2 id="profitH">利潤與售價</h2><span>利潤率以售價計算</span></div>
-          <div class="grid">
-            <div class="span2">
-              <label class="lb" for="margin">預期利潤率</label>
-              <div class="field"><input id="margin" inputmode="decimal" autocomplete="off"><span class="unit">% 售價</span></div>
-              <div class="chips" id="marginChips" role="group" aria-label="快速選擇利潤率">
-                <button type="button" class="chip" data-m="10">10%</button><button type="button" class="chip" data-m="15">15%</button><button type="button" class="chip" data-m="20">20%</button><button type="button" class="chip" data-m="25">25%</button><button type="button" class="chip" data-m="30">30%</button>
+          <div class="sec-h"><h2 id="profitH">利潤</h2><span>以售價計算</span></div>
+          <div class="mrow">
+            <div class="field"><input id="margin" inputmode="decimal" autocomplete="off" aria-label="預期利潤率"><span class="unit">%</span></div>
+            <div class="chips" id="marginChips" role="group" aria-label="快速選擇利潤率">
+              <button type="button" class="chip" data-m="10">10%</button><button type="button" class="chip" data-m="15">15%</button><button type="button" class="chip" data-m="20">20%</button><button type="button" class="chip" data-m="25">25%</button><button type="button" class="chip" data-m="30">30%</button>
+            </div>
+          </div>
+          <div class="prow2" id="presetRow">
+            <span class="lb">常用設定</span>
+            <div class="plist" id="plist"></div>
+          </div>
+
+          <details class="more" id="moreBox">
+            <summary><span class="t">費用與進階設定</span><span class="s num" id="feeSum"></span></summary>
+            <div class="in grid">
+              <div><label class="lb" for="ship1" id="ship1Lb">國際運費</label>
+                <div class="field"><span class="unit pre cur2">NT$</span><input id="ship1" inputmode="decimal" autocomplete="off"></div></div>
+              <div><label class="lb" for="ship2" id="ship2Lb">境內運費</label>
+                <div class="field"><span class="unit pre cur2">NT$</span><input id="ship2" inputmode="decimal" autocomplete="off"></div></div>
+              <div><label class="lb" for="svc">代購服務費</label>
+                <div class="field"><input id="svc" inputmode="decimal" autocomplete="off"><span class="unit">% 商品</span></div></div>
+              <div><label class="lb" for="ops">營運成本（刷卡、包材）</label>
+                <div class="field"><input id="ops" inputmode="decimal" autocomplete="off"><span class="unit">% 小計</span></div></div>
+              <div><label class="lb" for="round">售價進位</label>
+                <select id="round" class="sel">
+                  <option value="1">不進位</option><option value="10">進位到 10</option><option value="50">進位到 50</option><option value="100">進位到 100</option><option value="99">尾數 9</option>
+                </select></div>
+              <div><label class="lb" for="custom">自訂報價（反算利潤）</label>
+                <div class="field"><span class="unit pre cur2">NT$</span><input id="custom" inputmode="decimal" autocomplete="off" placeholder="留空＝建議售價"></div></div>
+              <label class="toggle span2" for="tax">
+                <span><b id="taxLb">開立發票（營業稅 5%）</b><small>稅金含在售價內</small></span>
+                <span class="sw"><input type="checkbox" id="tax"><i></i></span>
+              </label>
+              <div class="span2">
+                <label class="lb" for="presetName">把這組費用存成常用設定</label>
+                <form class="preset-row" id="presetForm">
+                  <div class="field"><input id="presetName" class="txt" placeholder="例如：美妝、服飾" autocomplete="off"></div>
+                  <button class="btn btn-line" type="submit">儲存</button>
+                </form>
+                <div class="hint" id="pempty">存好後，上方會出現一鍵套用的按鈕。</div>
               </div>
             </div>
-            <div><label class="lb" for="round">售價進位</label>
-              <select id="round" class="sel">
-                <option value="1">不進位</option><option value="10">進位到 10</option><option value="50">進位到 50</option><option value="100">進位到 100</option><option value="99">尾數 9</option>
-              </select></div>
-            <div><label class="lb" for="custom">自訂報價（選填，反算利潤）</label>
-              <div class="field"><span class="unit pre cur2">NT$</span><input id="custom" inputmode="decimal" autocomplete="off" placeholder="留空＝用建議售價"></div></div>
-            <label class="toggle span2" for="tax">
-              <span><b id="taxLb">開立發票（營業稅 5%）</b><small>稅金含在售價內，以售價計算</small></span>
-              <span class="sw"><input type="checkbox" id="tax"><i></i></span>
-            </label>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="presetH">
-          <div class="sec-h"><h2 id="presetH">常用設定</h2><span>一鍵套用運費、費率與利潤</span></div>
-          <div class="plist" id="plist"></div>
-          <div class="hint" id="pempty">還沒有儲存的設定。填好費用後在下方取名儲存。</div>
-          <form class="preset-row" id="presetForm">
-            <div class="field"><input id="presetName" class="txt" placeholder="例如：美妝、服飾、精品" autocomplete="off" aria-label="設定名稱"></div>
-            <button class="btn btn-pri" type="submit">儲存</button>
-          </form>
+          </details>
         </section>
       </div>
 
@@ -388,10 +432,10 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
           <div class="price num" id="heroP">—</div>
           <div class="sub num" id="heroSub"></div>
           <div class="badges" id="badges"></div>
-        </div>
-        <div class="kpis">
-          <div class="kpi"><div class="k">淨利潤</div><div class="v num" id="kProfit">—</div><span class="status ok" id="kStatus">健康</span></div>
-          <div class="kpi"><div class="k">實際利潤率</div><div class="v num" id="kMargin">—</div><div class="k num" id="kMarkup" style="margin-top:6px"></div></div>
+          <div class="hero-kpis">
+            <div><div class="k">淨利潤</div><div class="v num" id="kProfit">—</div><span class="status ok" id="kStatus">健康</span></div>
+            <div><div class="k">實際利潤率</div><div class="v num" id="kMargin">—</div><div class="k2 num" id="kMarkup"></div></div>
+          </div>
         </div>
         <div class="card">
           <div class="sec-h"><h2>費用明細</h2><span id="perUnit" class="num"></span></div>
@@ -399,7 +443,7 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
           <ul class="rows" id="rows"></ul>
         </div>
         <div class="card copybox stack">
-          <div class="sec-h" style="margin:0"><h2>給客人的報價</h2><span>可直接貼到 LINE / IG</span></div>
+          <div class="sec-h" style="margin:0"><h2>給客人的報價</h2><span>可貼到 LINE／IG</span></div>
           <textarea id="quoteText" aria-label="報價文字"></textarea>
           <div class="actions">
             <button type="button" class="btn btn-line" id="copyBtn">複製報價</button>
@@ -412,8 +456,8 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
   <div class="mbar" id="mbar">
     <div class="in">
       <div><div class="k" id="mK">建議售價</div><div class="p num" id="mP">—</div></div>
-      <div style="text-align:right"><div class="pf num" id="mProfit"></div>
-        <button type="button" class="btn btn-ghost sm" id="toQuote" style="margin-top:4px">看明細 ↓</button></div>
+      <div class="right"><div class="pf num" id="mProfit"></div>
+        <button type="button" class="btn btn-ghost sm" id="toQuote">明細</button></div>
     </div>
   </div>
 </section>
@@ -421,14 +465,14 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
 <!-- ================= 紀錄 ================= -->
 <section class="view" id="v-history" aria-labelledby="histH" hidden>
   <header class="appbar"><div class="wrap">
-    <div class="ttl"><div><h1 id="histH">報價紀錄</h1><p class="sub">存過的報價都在這裡，點「載入」可再修改</p></div></div>
+    <div class="ttl"><div><h1 id="histH">報價紀錄</h1><p class="sub">金額皆換算為台幣</p></div></div>
     <button type="button" class="btn sm btn-line" id="csvBtn">匯出 CSV</button>
   </div></header>
   <div class="wrap stack">
     <div class="summary">
       <div class="kpi"><div class="k">筆數</div><div class="v num" id="sCount">0</div></div>
-      <div class="kpi"><div class="k">報價總額（台幣）</div><div class="v num" id="sTotal">NT$0</div></div>
-      <div class="kpi"><div class="k">預估淨利（台幣）</div><div class="v num good" id="sProfit">NT$0</div></div>
+      <div class="kpi"><div class="k">報價總額</div><div class="v num" id="sTotal">NT$0</div></div>
+      <div class="kpi"><div class="k">預估淨利</div><div class="v num good" id="sProfit">NT$0</div></div>
     </div>
     <div class="hist-tools">
       <div class="field"><span class="unit pre">搜尋</span><input id="hq" class="txt" placeholder="商品或客人名稱" autocomplete="off"></div>
@@ -508,7 +552,7 @@ select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background
 
 <script>
 (() => {
-  const VERSION = "v1.0.1";
+  const VERSION = "v1.1.0";
   const $ = id => document.getElementById(id);
   const $$ = s => document.querySelectorAll(s);
   const store = {
@@ -614,7 +658,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
 
   function render(){
     const r = calc(), o = r.c.out, R = num(state.rate);
-    $("rateEq").textContent = "₩" + R.toLocaleString("en-US", { maximumFractionDigits: 4 });
+    $("rateEq").textContent = "₩" + R.toLocaleString("en-US", { maximumFractionDigits: 2 });
     $("rateEq2").textContent = "NT$" + (R ? (1000 / R).toFixed(2) : "—");
     $("priceConv").textContent = `≈ ${fmt(r.item / r.qty, o)} / 件`;
     $("heroK").textContent = r.customOn ? "你的報價" : "建議售價";
@@ -649,6 +693,8 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
     rows.push(`<li><span class="nm"><i class="dot" style="background:var(--seg6)"></i><span>淨利潤</span></span><span class="amt num ${r.profit >= 0 ? "good" : "bad"}">${fmt(r.profit, o)}</span></li>`);
     rows.push(`<li class="total"><span>總成本（不含稅）</span><span class="num">${fmt(r.cost, o)}</span></li>`);
     $("rows").innerHTML = rows.join("");
+    const so = r.s;
+    $("feeSum").textContent = [`運費 ${fmt(r.ship, o)}`, `服務 ${num(so.svc)}%`, `營運 ${num(so.ops)}%`, so.tax ? "含稅" : "", r.customOn ? "自訂報價" : ""].filter(Boolean).join(" · ");
     $("perUnit").textContent = r.qty > 1 ? `每件成本 ${fmt(r.cost / r.qty, o)}` : "";
     $("quoteText").value = quoteText(r);
 
@@ -696,7 +742,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
   // ---------- presets ----------
   function renderPresets(){
     const list = presets.filter(p => p.dir === dir);
-    $("pempty").hidden = list.length > 0; $("plist").hidden = !list.length;
+    $("pempty").hidden = list.length > 0; $("presetRow").hidden = !list.length;
     $("plist").innerHTML = list.map(p => `<span class="pchip"><button type="button" class="load" data-id="${p.id}">${esc(p.name)}<small>${p.v.svc}% · ${p.v.margin}%</small></button><button type="button" class="del" data-del="${p.id}" aria-label="刪除 ${esc(p.name)}">×</button></span>`).join("");
   }
   $("presetForm").addEventListener("submit", e => {
@@ -831,7 +877,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
   let fetching = false;
   async function refreshRate(silent){
     if (fetching) return; fetching = true;
-    $("rateStatus").className = "pill"; $("rateStatus").textContent = "抓取中…"; $("rateRefresh").disabled = true;
+    $("rateStatus").className = "pill"; $("rateStatus").textContent = "抓取中…"; $("rateRefresh").disabled = true; $("rateRefresh").classList.add("spin");
     const list = await Promise.all(SOURCES.map(fetchSource));
     const ok = list.filter(x => x.v);
     if (ok.length) {
@@ -842,7 +888,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
       live = { avg: Math.round(used.reduce((a, x) => a + x.v, 0) / used.length * 10000) / 10000, at: Date.now(), list, fresh: true };
       store.set("dg.live", { ...live, fresh: false });
     } else if (live) live.fresh = false;
-    fetching = false; $("rateRefresh").disabled = false;
+    fetching = false; $("rateRefresh").disabled = false; $("rateRefresh").classList.remove("spin");
     applyLive(); syncInputs(); render();
     if (!ok.length && !silent) toast(live ? "目前無法連線，先使用上次抓到的匯率" : "無法取得線上匯率，請手動輸入");
   }
@@ -857,7 +903,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
     $("rateModeBtn").textContent = auto ? "手動輸入" : "改回自動";
     $("rateModeBtn").disabled = !auto && !live;
     if (!auto) { st.className = "pill"; st.textContent = "手動匯率"; }
-    else if (live && live.fresh) { st.className = "pill live"; st.textContent = "● 即時平均"; }
+    else if (live && live.fresh) { st.className = "pill live"; st.textContent = "即時平均"; }
     else if (live) { st.className = "pill stale"; st.textContent = "離線 · 上次匯率"; }
     const used = live ? live.list.filter(x => x.used).length : 0;
     $("rateMeta").textContent = live ? (auto ? `${used} 個公開來源平均 · ${ago(live.at)}更新` : `參考：線上平均 ₩${live.avg}（${ago(live.at)}）`) : "尚未取得線上匯率";
