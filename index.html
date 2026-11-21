@@ -182,15 +182,20 @@ details.lookup > summary::-webkit-details-marker{display:none}
 details.lookup > summary svg{width:15px;height:15px}
 details.lookup[open] > summary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .lk-in{margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r-sm)}
-.sites{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
-@media (min-width:600px){.sites{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}}
-@media (max-width:599px){.lk-in{padding:12px}}
-.site{display:flex;flex-direction:column;justify-content:center;gap:1px;min-height:54px;padding:8px 12px;border:1px solid var(--line-2);border-radius:var(--r-sm);text-decoration:none;color:var(--fg);transition:border-color .15s,background .15s}
-.site:hover{border-color:var(--accent);background:var(--surface-3)}
-.site b{font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:6px}
-.site b::after{content:"↗";color:var(--faint);font-weight:400}
-.site small{font-size:12px;color:var(--faint)}
-.site.tr{border-style:dashed}
+.lk-row{display:flex;gap:8px}
+.lk-row .field{flex:1;min-width:0}
+.lk-row .btn{flex:none}
+.lk-gap{margin-top:16px}
+#sitePick .chip{color:var(--fg)}
+#sitePick .chip[aria-pressed="true"]{color:var(--ink-fg)}
+.lk-res{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.lk-also{margin-top:10px;font-size:13px;color:var(--faint);display:flex;flex-wrap:wrap;gap:4px 12px}
+.lk-also a{color:var(--accent);font-weight:500;text-decoration:none}
+#lkAlso{display:flex;flex-wrap:wrap;gap:4px 14px}
+.lk-res .lk-row{flex-wrap:wrap}
+.lk-res .lk-row .field{flex:1 1 200px}
+.lk-res .lk-row .btn{flex:1 1 auto}
+.lk-also a:hover{text-decoration:underline}
 
 /* ---------- calculator ---------- */
 .dirseg{width:100%}
@@ -372,13 +377,19 @@ details.lookup[open] > summary{background:var(--accent);border-color:var(--accen
               <div class="field"><input id="name" class="txt" autocomplete="off" placeholder="例如：Olive Young 防曬乳"></div>
               <details class="lookup" id="lookup">
                 <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span id="lookupLb">查詢韓國當地售價</span></summary>
-                <div class="lk-in">
-                  <label class="lb" for="lq">搜尋關鍵字</label>
-                  <div class="field"><input id="lq" class="txt" autocomplete="off" enterkeyhint="search" placeholder="預設用商品名稱"></div>
-                  <div class="hint" id="lqHint">用韓文或英文品牌名搜尋，結果最準確。</div>
-                  <div class="sites" id="sites"></div>
-                  <p class="hint">找到價格後，填到下方「商品原價」就會自動計算報價。</p>
-                </div>
+                <form class="lk-in" id="lkForm">
+                  <label class="lb" for="lq">商品或品牌名稱</label>
+                  <div class="lk-row"><div class="field"><input id="lq" class="txt" autocomplete="off" enterkeyhint="search" placeholder="例如：雪花秀 防曬乳"></div><button class="btn btn-pri" type="submit" id="lqBtn">查詢</button></div>
+                  <span class="lb lk-gap">在哪個網站查</span>
+                  <div class="chips" id="sitePick" role="group" aria-label="選擇查詢網站"></div>
+                  <div class="lk-res" id="lkRes" hidden>
+                    <label class="lb" for="lqKo" id="lqKoLb">韓文關鍵字（可修改）</label>
+                    <div class="lk-row"><div class="field"><input id="lqKo" class="txt" lang="ko" autocomplete="off"></div><a class="btn btn-line" id="lkOpen" target="_blank" rel="noopener">開啟</a></div>
+                    <div class="hint" id="lkMsg"></div>
+                    <div class="lk-also"><span>也在其他網站查：</span><span id="lkAlso"></span></div>
+                  </div>
+                  <p class="hint" id="lkFoot">按「查詢」會自動翻成韓文，並在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。</p>
+                </form>
               </details>
             </div>
             <div>
@@ -569,7 +580,7 @@ details.lookup[open] > summary{background:var(--accent);border-color:var(--accen
 
 <script>
 (() => {
-  const VERSION = "v1.2.0";
+  const VERSION = "v1.3.0";
   const $ = id => document.getElementById(id);
   const $$ = s => document.querySelectorAll(s);
   const store = {
@@ -747,37 +758,80 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
   }
   $("copyBtn").addEventListener("click", () => copyText($("quoteText").value, $("quoteText")));
 
-  // ---------- price lookup (opens Korean / Taiwanese shops' search pages) ----------
+  // ---------- price lookup: translate to Korean, then open the chosen shop's search ----------
   const SITES = {
     k2t: [
-      ["Naver 購物", "全網比價", "https://search.shopping.naver.com/search/all?query="],
-      ["Coupang", "電商最大", "https://www.coupang.com/np/search?q="],
-      ["Olive Young", "美妝保養", "https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query="],
-      ["Musinsa", "服飾鞋包", "https://www.musinsa.com/search/goods?keyword="],
-      ["Gmarket", "綜合電商", "https://www.gmarket.co.kr/n/search?keyword="],
-      ["11st", "綜合電商", "https://search.11st.co.kr/Search.tmall?kwd="],
-      ["Danawa", "最低價比價", "https://search.danawa.com/?query="]
+      ["Naver 購物", "https://search.shopping.naver.com/search/all?query="],
+      ["Coupang", "https://www.coupang.com/np/search?q="],
+      ["Olive Young", "https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query="],
+      ["Musinsa", "https://www.musinsa.com/search/goods?keyword="],
+      ["Gmarket", "https://www.gmarket.co.kr/n/search?keyword="],
+      ["11st", "https://search.11st.co.kr/Search.tmall?kwd="],
+      ["Danawa", "https://search.danawa.com/?query="]
     ],
     t2k: [
-      ["蝦皮", "綜合電商", "https://shopee.tw/search?keyword="],
-      ["momo", "綜合電商", "https://www.momoshop.com.tw/search/searchShop.jsp?keyword="],
-      ["PChome 24h", "綜合電商", "https://24h.pchome.com.tw/search/?q="],
-      ["Google 購物", "全網比價", "https://www.google.com/search?tbm=shop&q="]
+      ["蝦皮", "https://shopee.tw/search?keyword="],
+      ["momo", "https://www.momoshop.com.tw/search/searchShop.jsp?keyword="],
+      ["PChome 24h", "https://24h.pchome.com.tw/search/?q="],
+      ["Google 購物", "https://www.google.com/search?tbm=shop&q="]
     ]
   };
-  function renderLookup(){
-    const q = ($("lq").value.trim() || String(state[dir].name).trim());
-    const enc = encodeURIComponent(q);
-    $("lookupLb").textContent = dir === "k2t" ? "查詢韓國當地售價" : "查詢台灣當地售價";
-    $("lqHint").textContent = dir === "k2t" ? "用韓文或英文品牌名搜尋最準確，中文名可先按「翻成韓文」。" : "輸入商品名稱或品牌即可。";
-    $("lq").placeholder = state[dir].name ? `預設：${state[dir].name}` : "輸入商品名稱或品牌";
-    let html = SITES[dir].map(([n, d, u]) => `<a class="site" href="${q ? u + enc : "#"}" target="_blank" rel="noopener"><b>${n}</b><small>${d}</small></a>`).join("");
-    if (dir === "k2t") html += `<a class="site tr" href="https://papago.naver.com/?sk=zh-TW&tk=ko&st=${enc}" target="_blank" rel="noopener"><b>翻成韓文</b><small>Papago 翻譯</small></a>`;
-    $("sites").innerHTML = html;
+  let pick = Object.assign({ k2t: "Naver 購物", t2k: "蝦皮" }, store.get("dg.site", {}));
+  let lk = null;                       // last lookup: { dir, src, ko }
+  const siteUrl = (name, q) => { const s = SITES[dir].find(x => x[0] === name) || SITES[dir][0]; return s[1] + encodeURIComponent(q); };
+  const hasHangul = s => /[\uac00-\ud7a3]/.test(s);
+  const tcache = {};
+  async function toKorean(text){
+    if (hasHangul(text)) return text;
+    if (tcache[text]) return tcache[text];
+    const tries = [
+      async () => (await getJSON("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q=" + encodeURIComponent(text)))[0].map(x => x[0]).join(""),
+      async () => (await getJSON("https://api.mymemory.translated.net/get?langpair=zh-TW|ko&q=" + encodeURIComponent(text))).responseData.translatedText
+    ];
+    for (const t of tries) { try { const r = String(await t()).trim(); if (r) return tcache[text] = r; } catch {} }
+    return null;
   }
-  $("lq").addEventListener("input", renderLookup);
-  $("lq").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); const a = $("sites").querySelector("a"); if (a) window.open(a.href, "_blank", "noopener"); } });
-  $("sites").addEventListener("click", e => { if (!$("lq").value.trim() && !String(state[dir].name).trim()) { e.preventDefault(); $("lq").focus(); toast("先輸入要查的商品名稱"); } });
+  function renderLookup(){
+    const k = dir === "k2t";
+    if (!SITES[dir].some(x => x[0] === pick[dir])) pick[dir] = SITES[dir][0][0];
+    $("lookupLb").textContent = k ? "查詢韓國當地售價" : "查詢台灣當地售價";
+    $("lq").placeholder = state[dir].name ? `預設：${state[dir].name}` : (k ? "例如：雪花秀 防曬乳" : "例如：義美 小泡芙");
+    $("lkFoot").textContent = k ? "按「查詢」會自動翻成韓文，並在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。" : "按「查詢」會在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。";
+    $("lqKoLb").textContent = k ? "韓文關鍵字（可修改）" : "搜尋關鍵字（可修改）";
+    $("sitePick").innerHTML = SITES[dir].map(([n]) => `<button type="button" class="chip" data-site="${n}" aria-pressed="${n === pick[dir]}">${n}</button>`).join("");
+    const show = lk && lk.dir === dir;
+    $("lkRes").hidden = !show;
+    $("lkFoot").hidden = !!show;
+    if (!show) return;
+    if (document.activeElement !== $("lqKo")) $("lqKo").value = lk.ko;
+    $("lkOpen").href = siteUrl(pick[dir], lk.ko);
+    $("lkOpen").textContent = `開啟 ${pick[dir]}`;
+    $("lkAlso").innerHTML = SITES[dir].filter(x => x[0] !== pick[dir]).map(([n]) => `<a href="${siteUrl(n, lk.ko)}" target="_blank" rel="noopener">${n}</a>`).join("");
+  }
+  $("sitePick").addEventListener("click", e => {
+    const b = e.target.closest("[data-site]"); if (!b) return;
+    pick[dir] = b.dataset.site; store.set("dg.site", pick); renderLookup();
+  });
+  $("lqKo").addEventListener("input", () => { if (lk) { lk.ko = $("lqKo").value.trim() || lk.ko; renderLookup(); } });
+  $("lkForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const q = $("lq").value.trim() || String(state[dir].name).trim();
+    if (!q) { $("lq").focus(); toast("先輸入商品或品牌名稱"); return; }
+    // Open the tab now, while the tap still counts, so phones don't block it; fill in the address after translating.
+    const w = window.open("", "_blank");
+    try { w && w.document.write('<meta name="viewport" content="width=device-width"><p style="font:16px -apple-system,sans-serif;padding:24px;color:#455068">翻譯中，正在開啟搜尋結果…</p>'); } catch {}
+    const btn = $("lqBtn"); btn.disabled = true; btn.textContent = dir === "k2t" ? "翻譯中…" : "查詢中…";
+    let ko = q, failed = false;
+    if (dir === "k2t") { const r = await toKorean(q); if (r) ko = r; else failed = true; }
+    lk = { dir, src: q, ko };
+    const url = siteUrl(pick[dir], ko);
+    let opened = false;
+    if (w && !w.closed) { try { w.opener = null; w.location.href = url; opened = true; } catch {} }
+    btn.disabled = false; btn.textContent = "查詢";
+    renderLookup();
+    $("lkMsg").textContent = failed ? "翻譯服務暫時無法使用，先用原文搜尋。可在上方改成韓文後再開啟。"
+      : (dir === "k2t" && ko !== q ? `「${q}」→「${ko}」。` : "") + (opened ? `已在新分頁開啟 ${pick[dir]}。` : `點「開啟 ${pick[dir]}」看搜尋結果。`);
+  });
 
   // ---------- save to history ----------
   $("saveBtn").addEventListener("click", () => {

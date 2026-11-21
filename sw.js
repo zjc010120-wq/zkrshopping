@@ -1,6 +1,6 @@
 // 代購報價計算器 service worker — makes the app open offline.
 // Bump VERSION whenever any app file changes so devices pick up the new version.
-const VERSION = "v1.2.0";
+const VERSION = "v1.3.0";
 const SHELL = `shell-${VERSION}`;
 const FONTS = "fonts";
 const SHELL_FILES = [
