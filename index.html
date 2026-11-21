@@ -580,7 +580,7 @@ details.lookup[open] > summary{background:var(--accent);border-color:var(--accen
 
 <script>
 (() => {
-  const VERSION = "v1.3.0";
+  const VERSION = "v1.3.1";
   const $ = id => document.getElementById(id);
   const $$ = s => document.querySelectorAll(s);
   const store = {
@@ -779,24 +779,32 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
   let pick = Object.assign({ k2t: "Naver 購物", t2k: "蝦皮" }, store.get("dg.site", {}));
   let lk = null;                       // last lookup: { dir, src, ko }
   const siteUrl = (name, q) => { const s = SITES[dir].find(x => x[0] === name) || SITES[dir][0]; return s[1] + encodeURIComponent(q); };
-  const hasHangul = s => /[\uac00-\ud7a3]/.test(s);
+  // Only Chinese characters get translated; English (and Korean) words are searched as typed.
+  const HAN = /[\u3400-\u9fff\uf900-\ufaff]/;
+  const HAN_RUN = /([\u3400-\u9fff\uf900-\ufaff]+(?:[\s·、]*[\u3400-\u9fff\uf900-\ufaff]+)*)/;
   const tcache = {};
-  async function toKorean(text){
-    if (hasHangul(text)) return text;
+  async function translateRun(text){
     if (tcache[text]) return tcache[text];
     const tries = [
-      async () => (await getJSON("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q=" + encodeURIComponent(text)))[0].map(x => x[0]).join(""),
+      async () => (await getJSON("https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-TW&tl=ko&dt=t&q=" + encodeURIComponent(text)))[0].map(x => x[0]).join(""),
       async () => (await getJSON("https://api.mymemory.translated.net/get?langpair=zh-TW|ko&q=" + encodeURIComponent(text))).responseData.translatedText
     ];
     for (const t of tries) { try { const r = String(await t()).trim(); if (r) return tcache[text] = r; } catch {} }
     return null;
+  }
+  async function toKorean(text){
+    if (!HAN.test(text)) return text;
+    const parts = text.split(HAN_RUN).map(s => s.trim()).filter(Boolean);
+    const out = await Promise.all(parts.map(s => HAN.test(s) ? translateRun(s) : s));
+    if (out.includes(null)) return null;
+    return out.join(" ").replace(/\s+/g, " ").trim();
   }
   function renderLookup(){
     const k = dir === "k2t";
     if (!SITES[dir].some(x => x[0] === pick[dir])) pick[dir] = SITES[dir][0][0];
     $("lookupLb").textContent = k ? "查詢韓國當地售價" : "查詢台灣當地售價";
     $("lq").placeholder = state[dir].name ? `預設：${state[dir].name}` : (k ? "例如：雪花秀 防曬乳" : "例如：義美 小泡芙");
-    $("lkFoot").textContent = k ? "按「查詢」會自動翻成韓文，並在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。" : "按「查詢」會在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。";
+    $("lkFoot").textContent = k ? "按「查詢」會把中文自動翻成韓文（英文品牌名保留原文），並在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。" : "按「查詢」會在選好的網站打開搜尋結果。找到價格後填到下方「商品原價」。";
     $("lqKoLb").textContent = k ? "韓文關鍵字（可修改）" : "搜尋關鍵字（可修改）";
     $("sitePick").innerHTML = SITES[dir].map(([n]) => `<button type="button" class="chip" data-site="${n}" aria-pressed="${n === pick[dir]}">${n}</button>`).join("");
     const show = lk && lk.dir === dir;
@@ -830,7 +838,7 @@ ${s.tax ? "含稅、" : ""}含國際與境內運費
     btn.disabled = false; btn.textContent = "查詢";
     renderLookup();
     $("lkMsg").textContent = failed ? "翻譯服務暫時無法使用，先用原文搜尋。可在上方改成韓文後再開啟。"
-      : (dir === "k2t" && ko !== q ? `「${q}」→「${ko}」。` : "") + (opened ? `已在新分頁開啟 ${pick[dir]}。` : `點「開啟 ${pick[dir]}」看搜尋結果。`);
+      : (dir === "k2t" ? (ko !== q ? `「${q}」→「${ko}」。` : "英文／韓文名稱直接搜尋，不翻譯。") : "") + (opened ? `已在新分頁開啟 ${pick[dir]}。` : `點「開啟 ${pick[dir]}」看搜尋結果。`);
   });
 
   // ---------- save to history ----------
