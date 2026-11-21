@@ -1,0 +1,24 @@
+{
+  "name": "代購報價計算器",
+  "short_name": "代購報價",
+  "description": "韓國 ⇄ 台灣代購報價：即時匯率、成本、利潤、稅金一次算清楚",
+  "lang": "zh-Hant-TW",
+  "id": "./",
+  "start_url": "./#calc",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2446B8",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "新報價", "url": "./#calc", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "報價紀錄", "url": "./#history", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

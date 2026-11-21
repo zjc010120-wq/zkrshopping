@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>代購報價計算器</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="韓國 ⇄ 台灣代購報價：即時匯率、成本、利潤、稅金一次算清楚">
+<meta name="theme-color" content="#2446B8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1220" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="代購報價">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: phone = bottom tab bar + sticky price bar; tablet = left icon rail; desktop (≥1200) = labelled sidebar + form | sticky quote panel */
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F2F4F8; --line:#D9DEE8;
+  --fg:#18203A; --muted:#5E6782; --accent:#2446B8; --accent-ink:#FFFFFF; --accent-soft:#E6ECFB;
+  --red:#C8283C; --good:#13805A; --good-soft:#E2F4EC; --warn:#B4600B; --warn-soft:#FCEFDD;
+  --seg1:#2446B8; --seg2:#6C8BEA; --seg3:#9DB0E8; --seg4:#C9D3EE; --seg5:#E3A23B; --seg6:#13805A;
+  --badge:rgba(255,255,255,.18);
+  --shadow:0 1px 2px rgba(24,32,58,.07),0 4px 16px rgba(24,32,58,.07);
+  --f-body:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-num:"Space Grotesk","Noto Sans TC",ui-sans-serif,system-ui,sans-serif;
+  --r:14px; --nav-h:62px; --rail:0px;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1220; --surface:#171C2E; --surface-2:#1F2539; --line:#2C3450;
+  --fg:#E8ECF6; --muted:#9AA3BE; --accent:#7D98F2; --accent-ink:#0E1220; --accent-soft:#232C4A;
+  --red:#F0677A; --good:#4CC896; --good-soft:#163428; --warn:#F0AE5A; --warn-soft:#3A2A14;
+  --seg1:#7D98F2; --seg2:#5670CC; --seg3:#3F519A; --seg4:#2F3B66; --seg5:#E3A23B; --seg6:#4CC896;
+  --badge:rgba(14,18,32,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1220; --surface:#171C2E; --surface-2:#1F2539; --line:#2C3450;
+  --fg:#E8ECF6; --muted:#9AA3BE; --accent:#7D98F2; --accent-ink:#0E1220; --accent-soft:#232C4A;
+  --red:#F0677A; --good:#4CC896; --good-soft:#163428; --warn:#F0AE5A; --warn-soft:#3A2A14;
+  --seg1:#7D98F2; --seg2:#5670CC; --seg3:#3F519A; --seg4:#2F3B66; --seg5:#E3A23B; --seg6:#4CC896;
+  --badge:rgba(14,18,32,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+
+/* ---------- app shell ---------- */
+.nav{position:fixed;z-index:30;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav .brand{display:none}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:var(--nav-h);text-decoration:none;color:var(--muted);font-size:11.5px;font-weight:500}
+.nav a svg{width:24px;height:24px}
+.nav a[aria-current="page"]{color:var(--accent)}
+.nav a[aria-current="page"] .ic{background:var(--accent-soft)}
+.nav .ic{display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background .2s}
+.content{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:1180px;margin:0 auto;padding-block:12px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+.appbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 10px;flex-wrap:wrap}
+.appbar h1{font-size:20px;margin:0;line-height:1.2}
+.appbar .sub{color:var(--muted);font-size:12.5px;margin:0}
+.appbar .ttl{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:34px;height:34px;border-radius:10px;flex:none}
+
+@media (min-width:768px){
+  :root{--rail:88px}
+  .nav{top:0;right:auto;width:var(--rail);flex-direction:column;justify-content:flex-start;gap:6px;border-top:0;border-right:1px solid var(--line);
+    padding-top:calc(16px + env(safe-area-inset-top,0px));padding-right:0}
+  .nav a{flex:none;height:68px}
+  .nav .brand{display:flex;justify-content:center;margin-bottom:10px}
+  .content{margin-left:calc(var(--rail) + env(safe-area-inset-left,0px));padding-bottom:0}
+  .wrap{padding-left:max(24px,0px);padding-right:max(24px,env(safe-area-inset-right,0px))}
+}
+@media (min-width:1200px){
+  :root{--rail:232px}
+  .nav{padding-left:calc(12px + env(safe-area-inset-left,0px));padding-right:12px}
+  .nav .brand{justify-content:flex-start;align-items:center;gap:10px;padding:0 8px 10px;font-weight:700;font-size:15px}
+  .nav a{flex-direction:row;justify-content:flex-start;gap:12px;height:48px;padding:0 8px;border-radius:12px;font-size:14.5px}
+  .nav a[aria-current="page"]{background:var(--accent-soft)}
+  .nav a[aria-current="page"] .ic{background:transparent}
+  .nav .ic{width:28px}
+  .nav .navfoot{margin-top:auto;padding:12px 8px calc(16px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:12px}
+}
+.navfoot{display:none}
+.lbl-wide{display:none}
+@media (min-width:1200px){.lbl-wide{display:inline}}
+@media (min-width:1200px){.navfoot{display:block}}
+
+/* ---------- shared pieces ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:0 1px 3px rgba(24,32,58,.05)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.sec-h h2{font-size:14px;margin:0;letter-spacing:.04em}
+.sec-h span{font-size:12px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:500;color:var(--muted);min-height:40px;white-space:nowrap;flex:1}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.btn{border:0;border-radius:10px;padding:0 16px;min-height:46px;font-weight:500;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn-pri{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:var(--surface-2);color:var(--fg)}
+.btn-line{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
+.btn-danger{background:var(--surface);color:var(--red);border:1px solid var(--line)}
+.btn.sm{min-height:38px;padding:0 12px;font-size:13.5px}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:default}
+.pill{font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.live{background:var(--good-soft);color:var(--good)}
+.pill.stale{background:var(--warn-soft);color:var(--warn)}
+.hint{font-size:12px;color:var(--muted);margin-top:5px}
+.grid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid .span2{grid-column:1/-1}
+label.lb{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;transition:border-color .15s}
+.field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field input{flex:1;min-width:0;border:0;background:transparent;padding:10px 12px;font-size:16px;font-family:var(--f-num);font-variant-numeric:tabular-nums;outline:none;min-height:46px}
+.field input.txt{font-family:var(--f-body)}
+.field .unit{display:flex;align-items:center;padding:0 12px;color:var(--muted);font-size:13px;background:var(--surface-2);border-left:1px solid var(--line);white-space:nowrap}
+.field .pre{border-left:0;border-right:1px solid var(--line)}
+.step{display:flex}
+.step button{width:42px;border:0;border-left:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:18px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+select.sel{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px;min-height:46px;font-size:16px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;min-height:52px}
+.toggle b{font-weight:500;font-size:14px}
+.toggle small{display:block;color:var(--muted);font-size:12px}
+.sw{position:relative;width:46px;height:28px;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.sw i{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked+i{background:var(--accent)}
+.sw input:checked+i::after{transform:translateX(18px)}
+.sw input:focus-visible+i{outline:2px solid var(--accent);outline-offset:2px}
+.empty{color:var(--muted);font-size:13.5px;text-align:center;padding:28px 12px}
+
+/* ---------- calculator ---------- */
+.dirseg{width:100%}
+@media (min-width:600px){.dirseg{width:auto}}
+.calc{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1024px){.calc{grid-template-columns:minmax(0,1fr) 380px;align-items:start}
+  .quote{position:sticky;top:calc(76px + env(safe-area-inset-top,0px))}}
+@media (min-width:1360px){.calc{grid-template-columns:minmax(0,1fr) 420px}}
+
+.rate{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);background:var(--accent-soft);border-color:transparent}
+@media (min-width:600px){.rate{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
+.rate .eq{font-size:13.5px;color:var(--muted)}
+.rate .eq b{color:var(--fg)}
+.rate .span-all{grid-column:1/-1}
+.rate-side{display:flex;flex-direction:column;gap:8px}
+@media (min-width:600px){.rate-side{align-items:flex-end}}
+.rate-btns{display:flex;gap:8px}
+.rate-btns .btn{flex:1;background:var(--surface)}
+.rate-ctl{display:flex;align-items:center;gap:8px}
+.rate-ctl .field{flex:1;min-width:120px}
+.srcs{border-top:1px solid var(--line);padding-top:8px;font-size:13px}
+.srcs summary{cursor:pointer;color:var(--accent);font-weight:500;min-height:32px;display:flex;align-items:center}
+.srcs ul{list-style:none;margin:6px 0 0;padding:0}
+.srcs li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.srcs li small{color:var(--muted)}
+.srcs li.off{color:var(--muted);text-decoration:line-through}
+
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);overflow:hidden}
+.pchip button{border:0;background:transparent;cursor:pointer;min-height:36px}
+.pchip .load{padding:0 6px 0 14px;font-size:13.5px}
+.pchip .load small{color:var(--muted);margin-left:6px;font-size:11.5px}
+.pchip .del{padding:0 12px 0 6px;color:var(--muted);font-size:16px}
+.pchip .del:hover{color:var(--red)}
+.preset-row{display:flex;gap:8px;margin-top:12px}
+.preset-row .field{flex:1}
+
+.quote{display:flex;flex-direction:column;gap:14px}
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.hero .k{font-size:12.5px;opacity:.85;letter-spacing:.06em}
+.hero .price{font-size:clamp(34px,9vw,46px);font-weight:700;line-height:1.1;margin:4px 0 6px;overflow-wrap:anywhere}
+.hero .sub{font-size:12.5px;opacity:.85}
+.hero .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.badge{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--badge)}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:20px;font-weight:700;margin-top:2px}
+.good{color:var(--good)} .bad{color:var(--red)}
+.status{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;margin-top:6px}
+.status.ok{background:var(--good-soft);color:var(--good)}
+.status.low{background:var(--warn-soft);color:var(--warn)}
+.status.neg{background:var(--warn-soft);color:var(--red)}
+.bar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:4px 0 14px}
+.bar span{display:block;height:100%;transition:width .3s}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.rows li:last-child{border-bottom:0}
+.rows .nm{display:flex;align-items:center;gap:8px;min-width:0}
+.rows .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.rows .nm small{color:var(--muted);font-size:12px}
+.rows .amt{font-weight:600;white-space:nowrap}
+.rows li.total{border-top:1px solid var(--line);border-bottom:0;margin-top:4px;padding-top:12px;font-weight:700}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.copybox textarea{width:100%;min-height:104px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);font-size:13.5px;line-height:1.6;color:var(--fg)}
+
+.mbar{position:fixed;z-index:25;left:0;right:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(24,32,58,.08);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mbar .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mbar .k{font-size:11.5px;color:var(--muted)}
+.mbar .p{font-size:22px;font-weight:700;line-height:1.1}
+.mbar .pf{font-size:12px}
+#v-calc > .wrap{padding-bottom:96px}
+@media (min-width:768px){.mbar{left:calc(var(--rail) + env(safe-area-inset-left,0px));bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
+@media (min-width:1024px){.mbar{display:none}#v-calc > .wrap{padding-bottom:28px}}
+
+/* ---------- history ---------- */
+.hist-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hist-tools .field{flex:1;min-width:200px}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.summary .kpi .v{font-size:18px}
+.hlist{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.hlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1500px){.hlist{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.hitem{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.hitem .t{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.hitem h3{margin:0;font-size:15px;overflow-wrap:anywhere}
+.hitem .meta{font-size:12px;color:var(--muted)}
+.hitem .p{font-size:20px;font-weight:700;white-space:nowrap}
+.hitem .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.hitem .b{display:flex;gap:8px;flex-wrap:wrap}
+.hitem .b .btn{flex:1}
+
+/* ---------- settings ---------- */
+.prefs{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);max-width:760px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px dashed var(--line)}
+.prow:last-child{border-bottom:0}
+.prow .d{min-width:0}
+.prow .d b{display:block;font-weight:500;font-size:14.5px}
+.prow .d small{color:var(--muted);font-size:12.5px}
+.steps{margin:8px 0 0;padding-left:20px;font-size:14px;color:var(--fg)}
+.steps li{margin:4px 0}
+.install-card{background:var(--accent-soft);border-color:transparent}
+.banner{display:flex;align-items:center;gap:12px;justify-content:space-between;background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:13.5px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:50;display:flex;gap:14px;align-items:center;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.toast button{border:0;background:transparent;color:var(--bg);text-decoration:underline;cursor:pointer;font-weight:700;min-height:32px}
+@media (min-width:768px){.toast{left:calc(50% + var(--rail)/2);bottom:96px}}
+@media (min-width:1024px){.toast{bottom:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="主選單">
+  <div class="brand"><img class="logo" src="icons/icon-192.png" alt=""><span class="lbl-wide">代購報價</span></div>
+  <a href="#calc" data-view="calc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg></span><span>計算</span></a>
+  <a href="#history" data-view="history"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H8"/><path d="M4 4h4v16H4z"/><path d="M11 9h6M11 13h6M11 17h3"/></svg></span><span>紀錄</span></a>
+  <a href="#prefs" data-view="prefs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span>設定</span></a>
+  <div class="navfoot">資料只存在這台裝置<br><span id="verLbl">v1.0.0</span></div>
+</nav>
+
+<div class="content">
+<!-- ================= 計算 ================= -->
+<section class="view" id="v-calc" aria-labelledby="calcH">
+  <header class="appbar"><div class="wrap">
+    <div class="ttl"><div><h1 id="calcH">報價計算</h1><p class="sub">韓國 ⇄ 台灣 · 成本、利潤、稅金一次算清楚</p></div></div>
+    <div class="seg dirseg" role="group" aria-label="報價方向">
+      <button type="button" data-dir="k2t" aria-pressed="true">🇰🇷 韓貨賣台灣</button>
+      <button type="button" data-dir="t2k" aria-pressed="false">🇹🇼 台貨賣韓國</button>
+    </div>
+  </div></header>
+  <div class="wrap">
+    <div class="banner" id="installBanner" hidden style="margin-bottom:14px">
+      <span>把計算器加到主畫面，像 App 一樣一鍵開啟。</span>
+      <span style="display:flex;gap:8px"><button type="button" class="btn sm btn-pri" data-install>安裝</button><button type="button" class="btn sm btn-line" id="bannerClose">稍後</button></span>
+    </div>
+    <div class="calc">
+      <div class="stack">
+        <section class="card rate" aria-labelledby="rateH">
+          <div>
+            <div class="sec-h" style="margin-bottom:4px"><h2 id="rateH">匯率</h2><span class="pill" id="rateStatus">抓取中…</span></div>
+            <div class="eq">NT$1 ＝ <b class="num" id="rateEq">₩41.5</b>　·　₩1,000 ＝ <b class="num" id="rateEq2">NT$24.10</b></div>
+            <div class="hint" id="rateMeta"></div>
+          </div>
+          <div class="rate-side">
+            <div class="rate-btns">
+              <button type="button" class="btn sm btn-line" id="rateRefresh">↻ 重新抓取</button>
+              <button type="button" class="btn sm btn-line" id="rateModeBtn">手動輸入</button>
+            </div>
+            <div class="rate-ctl" id="manualBox" hidden>
+              <span style="font-size:13px;color:var(--muted)">NT$1 =</span>
+              <div class="field"><input id="rate" inputmode="decimal" autocomplete="off" aria-label="1 台幣可換多少韓元"><span class="unit">₩</span></div>
+            </div>
+          </div>
+          <details class="srcs span-all">
+            <summary>查看各來源匯率</summary>
+            <ul id="srcList"></ul>
+            <p class="hint">以上為國際市場中間價，銀行賣出價與刷卡匯率通常差 1–2%，可用「營運成本 %」吸收。<a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" target="_blank" rel="noopener">對照台灣銀行牌告 ↗</a></p>
+          </details>
+        </section>
+
+        <section class="card" aria-labelledby="itemH">
+          <div class="sec-h"><h2 id="itemH">商品</h2><span id="itemHint">韓國售價</span></div>
+          <div class="grid">
+            <div class="span2">
+              <label class="lb" for="name">商品名稱</label>
+              <div class="field"><input id="name" class="txt" autocomplete="off" placeholder="例如：Olive Young 防曬乳"></div>
+            </div>
+            <div>
+              <label class="lb" for="price" id="priceLb">商品原價</label>
+              <div class="field"><span class="unit pre" id="priceCur">₩</span><input id="price" inputmode="decimal" autocomplete="off"></div>
+              <div class="hint num" id="priceConv"></div>
+            </div>
+            <div>
+              <label class="lb" for="qty">數量</label>
+              <div class="field"><input id="qty" inputmode="numeric" autocomplete="off"><span class="step"><button type="button" data-step="-1" aria-label="減少數量">−</button><button type="button" data-step="1" aria-label="增加數量">＋</button></span></div>
+              <div class="hint">運費以整筆訂單計算</div>
+            </div>
+            <div class="span2">
+              <label class="lb" for="customer">客人（選填）</label>
+              <div class="field"><input id="customer" class="txt" autocomplete="off" placeholder="例如：IG @mina_shop"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="costH">
+          <div class="sec-h"><h2 id="costH">費用</h2><span>運費以整筆計，費率以 % 計</span></div>
+          <div class="grid">
+            <div><label class="lb" for="ship1" id="ship1Lb">國際運費</label>
+              <div class="field"><span class="unit pre cur2">NT$</span><input id="ship1" inputmode="decimal" autocomplete="off"></div></div>
+            <div><label class="lb" for="ship2" id="ship2Lb">境內運費</label>
+              <div class="field"><span class="unit pre cur2">NT$</span><input id="ship2" inputmode="decimal" autocomplete="off"></div></div>
+            <div><label class="lb" for="svc">代購服務費</label>
+              <div class="field"><input id="svc" inputmode="decimal" autocomplete="off"><span class="unit">% 商品</span></div></div>
+            <div><label class="lb" for="ops">營運成本（刷卡、包材、雜支）</label>
+              <div class="field"><input id="ops" inputmode="decimal" autocomplete="off"><span class="unit">% 小計</span></div></div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="profitH">
+          <div class="sec-h"><h2 id="profitH">利潤與售價</h2><span>利潤率以售價計算</span></div>
+          <div class="grid">
+            <div class="span2">
+              <label class="lb" for="margin">預期利潤率</label>
+              <div class="field"><input id="margin" inputmode="decimal" autocomplete="off"><span class="unit">% 售價</span></div>
+              <div class="chips" id="marginChips" role="group" aria-label="快速選擇利潤率">
+                <button type="button" class="chip" data-m="10">10%</button><button type="button" class="chip" data-m="15">15%</button><button type="button" class="chip" data-m="20">20%</button><button type="button" class="chip" data-m="25">25%</button><button type="button" class="chip" data-m="30">30%</button>
+              </div>
+            </div>
+            <div><label class="lb" for="round">售價進位</label>
+              <select id="round" class="sel">
+                <option value="1">不進位</option><option value="10">進位到 10</option><option value="50">進位到 50</option><option value="100">進位到 100</option><option value="99">尾數 9</option>
+              </select></div>
+            <div><label class="lb" for="custom">自訂報價（選填，反算利潤）</label>
+              <div class="field"><span class="unit pre cur2">NT$</span><input id="custom" inputmode="decimal" autocomplete="off" placeholder="留空＝用建議售價"></div></div>
+            <label class="toggle span2" for="tax">
+              <span><b id="taxLb">開立發票（營業稅 5%）</b><small>稅金含在售價內，以售價計算</small></span>
+              <span class="sw"><input type="checkbox" id="tax"><i></i></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="presetH">
+          <div class="sec-h"><h2 id="presetH">常用設定</h2><span>一鍵套用運費、費率與利潤</span></div>
+          <div class="plist" id="plist"></div>
+          <div class="hint" id="pempty">還沒有儲存的設定。填好費用後在下方取名儲存。</div>
+          <form class="preset-row" id="presetForm">
+            <div class="field"><input id="presetName" class="txt" placeholder="例如：美妝、服飾、精品" autocomplete="off" aria-label="設定名稱"></div>
+            <button class="btn btn-pri" type="submit">儲存</button>
+          </form>
+        </section>
+      </div>
+
+      <aside class="quote" id="quote" aria-label="報價結果">
+        <div class="hero">
+          <div class="k" id="heroK">建議售價</div>
+          <div class="price num" id="heroP">—</div>
+          <div class="sub num" id="heroSub"></div>
+          <div class="badges" id="badges"></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="k">淨利潤</div><div class="v num" id="kProfit">—</div><span class="status ok" id="kStatus">健康</span></div>
+          <div class="kpi"><div class="k">實際利潤率</div><div class="v num" id="kMargin">—</div><div class="k num" id="kMarkup" style="margin-top:6px"></div></div>
+        </div>
+        <div class="card">
+          <div class="sec-h"><h2>費用明細</h2><span id="perUnit" class="num"></span></div>
+          <div class="bar" id="bar" aria-hidden="true"></div>
+          <ul class="rows" id="rows"></ul>
+        </div>
+        <div class="card copybox stack">
+          <div class="sec-h" style="margin:0"><h2>給客人的報價</h2><span>可直接貼到 LINE / IG</span></div>
+          <textarea id="quoteText" aria-label="報價文字"></textarea>
+          <div class="actions">
+            <button type="button" class="btn btn-line" id="copyBtn">複製報價</button>
+            <button type="button" class="btn btn-pri" id="saveBtn">存到紀錄</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div class="mbar" id="mbar">
+    <div class="in">
+      <div><div class="k" id="mK">建議售價</div><div class="p num" id="mP">—</div></div>
+      <div style="text-align:right"><div class="pf num" id="mProfit"></div>
+        <button type="button" class="btn btn-ghost sm" id="toQuote" style="margin-top:4px">看明細 ↓</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 紀錄 ================= -->
+<section class="view" id="v-history" aria-labelledby="histH" hidden>
+  <header class="appbar"><div class="wrap">
+    <div class="ttl"><div><h1 id="histH">報價紀錄</h1><p class="sub">存過的報價都在這裡，點「載入」可再修改</p></div></div>
+    <button type="button" class="btn sm btn-line" id="csvBtn">匯出 CSV</button>
+  </div></header>
+  <div class="wrap stack">
+    <div class="summary">
+      <div class="kpi"><div class="k">筆數</div><div class="v num" id="sCount">0</div></div>
+      <div class="kpi"><div class="k">報價總額（台幣）</div><div class="v num" id="sTotal">NT$0</div></div>
+      <div class="kpi"><div class="k">預估淨利（台幣）</div><div class="v num good" id="sProfit">NT$0</div></div>
+    </div>
+    <div class="hist-tools">
+      <div class="field"><span class="unit pre">搜尋</span><input id="hq" class="txt" placeholder="商品或客人名稱" autocomplete="off"></div>
+      <div class="seg" role="group" aria-label="篩選方向" id="hfilter">
+        <button type="button" data-f="all" aria-pressed="true">全部</button>
+        <button type="button" data-f="k2t" aria-pressed="false">韓→台</button>
+        <button type="button" data-f="t2k" aria-pressed="false">台→韓</button>
+      </div>
+    </div>
+    <div class="hlist" id="hlist"></div>
+    <div class="empty" id="hempty">還沒有報價紀錄。在「計算」頁按「存到紀錄」，報價就會出現在這裡。</div>
+  </div>
+</section>
+
+<!-- ================= 設定 ================= -->
+<section class="view" id="v-prefs" aria-labelledby="prefH" hidden>
+  <header class="appbar"><div class="wrap">
+    <div class="ttl"><div><h1 id="prefH">設定</h1><p class="sub">外觀、安裝與資料備份</p></div></div>
+  </div></header>
+  <div class="wrap">
+    <div class="prefs">
+      <section class="card install-card" aria-labelledby="instH">
+        <div class="sec-h"><h2 id="instH">安裝成 App</h2><span class="pill" id="instState">未安裝</span></div>
+        <div id="instAuto">
+          <p style="margin:0 0 12px;font-size:14px">安裝後會出現在主畫面或應用程式清單，全螢幕開啟，沒有網路也能使用。</p>
+          <button type="button" class="btn btn-pri" data-install>安裝 App</button>
+        </div>
+        <div id="instIOS" hidden>
+          <p style="margin:0;font-size:14px">iPhone / iPad 請用 Safari：</p>
+          <ol class="steps"><li>點下方工具列的「分享」按鈕 <b>⬆︎</b></li><li>選「加入主畫面」</li><li>按右上角「新增」</li></ol>
+        </div>
+        <div id="instManual" hidden>
+          <ol class="steps"><li><b>Android（Chrome）</b>：右上角 ⋮ →「安裝應用程式」或「加到主畫面」</li><li><b>iPhone / iPad（Safari）</b>：分享 ⬆︎ →「加入主畫面」</li><li><b>電腦（Chrome / Edge）</b>：網址列右側的安裝圖示 ⊕</li></ol>
+        </div>
+        <p id="instDone" hidden style="margin:0;font-size:14px">已經是 App 模式。更新會在下次開啟時自動套用。</p>
+      </section>
+
+      <section class="card" aria-labelledby="lookH">
+        <div class="sec-h"><h2 id="lookH">外觀</h2></div>
+        <div class="prow">
+          <div class="d"><b>主題</b><small>跟隨系統會依裝置自動切換深淺色</small></div>
+          <div class="seg" role="group" aria-label="主題" id="themeSeg">
+            <button type="button" data-t="system" aria-pressed="true">跟隨系統</button>
+            <button type="button" data-t="light" aria-pressed="false">淺色</button>
+            <button type="button" data-t="dark" aria-pressed="false">深色</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="dataH">
+        <div class="sec-h"><h2 id="dataH">資料與備份</h2><span>資料只存在這台裝置</span></div>
+        <div class="prow">
+          <div class="d"><b>備份資料</b><small>下載包含紀錄與常用設定的檔案，可匯入到其他裝置</small></div>
+          <button type="button" class="btn sm btn-line" id="backupBtn">下載備份</button>
+        </div>
+        <div class="prow">
+          <div class="d"><b>還原備份</b><small>選擇之前下載的 .json 檔，紀錄會合併、不會覆蓋</small></div>
+          <label class="btn sm btn-line" for="restoreFile" style="cursor:pointer">選擇檔案</label>
+          <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+        </div>
+        <div class="prow">
+          <div class="d"><b>清除所有資料</b><small>刪除這台裝置上的紀錄、常用設定與輸入值</small></div>
+          <button type="button" class="btn sm btn-danger" id="wipeBtn">清除</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="aboutH">
+        <div class="sec-h"><h2 id="aboutH">關於</h2><span class="num" id="verLbl2">v1.0.0</span></div>
+        <p style="margin:0;font-size:13.5px;color:var(--muted)">匯率每次開啟時自動抓取 ExchangeRate-API、Currency API、FloatRates 三個公開來源並取平均，偏離中位數超過 3% 的來源不採用。計算結果僅供參考，實際匯率以銀行或刷卡匯率為準。</p>
+      </section>
+    </div>
+  </div>
+</section>
+</div>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastMsg"></span><button type="button" id="toastAct" hidden></button></div>
+
+<script>
+(() => {
+  const VERSION = "v1.0.1";
+  const $ = id => document.getElementById(id);
+  const $$ = s => document.querySelectorAll(s);
+  const store = {
+    get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    del(k){ try { localStorage.removeItem(k); } catch {} }
+  };
+  $("verLbl").textContent = $("verLbl2").textContent = VERSION;
+
+  // ---------- theme ----------
+  function applyTheme(t){
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    $$("#themeSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
+  }
+  let theme = store.get("dg.theme", "system"); applyTheme(theme);
+  $$("#themeSeg button").forEach(b => b.addEventListener("click", () => { theme = b.dataset.t; store.set("dg.theme", theme); applyTheme(theme); }));
+
+  // ---------- routing ----------
+  const VIEWS = ["calc", "history", "prefs"];
+  function route(){
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "calc";
+    VIEWS.forEach(n => $("v-" + n).hidden = n !== v);
+    $$(".nav a").forEach(a => a.dataset.view === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+    if (v === "history") renderHistory();
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", route);
+
+  // ---------- calculator state ----------
+  const DEFAULTS = {
+    rate: 41.5, rateMode: "auto",
+    k2t: { name: "", customer: "", price: 50000, qty: 1, ship1: 200, ship2: 60, svc: 10, ops: 3, margin: 20, round: "10", custom: "", tax: false },
+    t2k: { name: "", customer: "", price: 1000, qty: 1, ship1: 10000, ship2: 3000, svc: 10, ops: 3, margin: 20, round: "100", custom: "", tax: false }
+  };
+  const CFG = {
+    k2t: { src: "₩", out: "NT$", srcName: "韓國售價", taxRate: 0.05, taxLb: "開立發票（營業稅 5%）", ship1: "國際運費（韓→台）", ship2: "台灣境內運費", from: "韓元", short: "韓→台" },
+    t2k: { src: "NT$", out: "₩", srcName: "台灣售價", taxRate: 0.10, taxLb: "含韓國 VAT（10%）", ship1: "國際運費（台→韓）", ship2: "韓國境內運費", from: "台幣", short: "台→韓" }
+  };
+  let state = store.get("dg.state", null) || JSON.parse(JSON.stringify(DEFAULTS));
+  state.k2t = Object.assign({}, DEFAULTS.k2t, state.k2t);
+  state.t2k = Object.assign({}, DEFAULTS.t2k, state.t2k);
+  let dir = store.get("dg.dir", "k2t");
+  let presets = store.get("dg.presets", []);
+  let history = store.get("dg.history", []);
+  let presetActive = "";
+
+  const NUMF = ["price","qty","ship1","ship2","svc","ops","margin","custom"];
+  const MONEY = ["price","ship1","ship2","custom"];
+  const TEXTF = ["name","customer"];
+  const num = v => { const n = parseFloat(String(v).replace(/[,\s]/g, "")); return isFinite(n) ? n : 0; };
+  const fmt = (n, cur) => (n < 0 ? "−" : "") + cur + Math.round(Math.abs(n)).toLocaleString("en-US");
+  const group = v => { const s = String(v).replace(/,/g, ""); if (s === "" || isNaN(+s)) return v; const [a, b] = s.split("."); return (+a).toLocaleString("en-US") + (b !== undefined ? "." + b : ""); };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+  function roundPrice(p, mode){
+    if (mode === "1") return Math.round(p);
+    if (mode === "99") { const up = Math.ceil(p / 10) * 10 - 1; return up >= p ? up : up + 10; }
+    const m = +mode; return Math.ceil(p / m) * m;
+  }
+  function compute(d, s, R){
+    const c = CFG[d]; R = R || 1;
+    const qty = Math.max(1, Math.round(num(s.qty)));
+    const toOut = d === "k2t" ? x => x / R : x => x * R;
+    const item = toOut(num(s.price)) * qty;
+    const svc = item * num(s.svc) / 100;
+    const ship = num(s.ship1) + num(s.ship2);
+    const ops = (item + svc + ship) * num(s.ops) / 100;
+    const cost = item + svc + ship + ops;
+    const m = Math.min(num(s.margin), 95) / 100;
+    const tr = s.tax ? c.taxRate : 0;
+    const suggested = roundPrice(cost / (1 - m) * (1 + tr), s.round);
+    const customOn = String(s.custom).trim() !== "" && num(s.custom) > 0;
+    const price = customOn ? num(s.custom) : suggested;
+    const tax = price - price / (1 + tr);
+    const profit = price - tax - cost;
+    const net = price - tax;
+    return { c, s, qty, item, svc, ship, ops, cost, tax, price, profit, suggested, customOn,
+      marginReal: net > 0 ? profit / net : 0, markup: cost > 0 ? profit / cost : 0 };
+  }
+  const calc = () => compute(dir, state[dir], num(state.rate));
+
+  function syncInputs(){
+    const c = CFG[dir], s = state[dir];
+    $("rate").value = state.rate;
+    [...NUMF, ...TEXTF].forEach(f => { const el = $(f); if (document.activeElement !== el) el.value = MONEY.includes(f) ? group(s[f]) : s[f]; });
+    $("round").value = s.round; $("tax").checked = !!s.tax;
+    $("priceCur").textContent = c.src;
+    $$(".cur2").forEach(e => e.textContent = c.out);
+    $("itemHint").textContent = c.srcName; $("priceLb").textContent = `商品原價（${c.from}）`;
+    $("ship1Lb").textContent = c.ship1; $("ship2Lb").textContent = c.ship2; $("taxLb").textContent = c.taxLb;
+    $$(".dirseg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.dir === dir));
+    $("round").options[4].text = dir === "k2t" ? "尾數 9（如 2,049）" : "尾數 9（如 41,999）";
+  }
+
+  function quoteText(r){
+    const o = r.c.out, s = r.s;
+    return `【代購報價】${s.name || "商品"}
+${s.customer ? "客人：" + s.customer + "\n" : ""}商品原價：${r.c.src}${group(s.price)}${r.qty > 1 ? ` × ${r.qty} 件` : ""}
+報價：${fmt(r.price, o)}${r.qty > 1 ? `（每件 ${fmt(r.price / r.qty, o)}）` : ""}
+${s.tax ? "含稅、" : ""}含國際與境內運費
+＊匯率可能變動，以下單當日為準`;
+  }
+
+  function render(){
+    const r = calc(), o = r.c.out, R = num(state.rate);
+    $("rateEq").textContent = "₩" + R.toLocaleString("en-US", { maximumFractionDigits: 4 });
+    $("rateEq2").textContent = "NT$" + (R ? (1000 / R).toFixed(2) : "—");
+    $("priceConv").textContent = `≈ ${fmt(r.item / r.qty, o)} / 件`;
+    $("heroK").textContent = r.customOn ? "你的報價" : "建議售價";
+    $("heroP").textContent = fmt(r.price, o);
+    $("heroSub").textContent = `${r.c.src}${group(r.s.price)} × ${r.qty} ≈ ${fmt(r.item, o)}`;
+    const b = [];
+    if (r.qty > 1) b.push(`每件 ${fmt(r.price / r.qty, o)}`);
+    b.push(r.s.tax ? "含稅" : "未稅");
+    if (!r.customOn && r.s.round !== "1") b.push("已進位");
+    if (r.customOn) b.push(`建議價 ${fmt(r.suggested, o)}`);
+    $("badges").innerHTML = b.map(t => `<span class="badge">${t}</span>`).join("");
+
+    const kp = $("kProfit"); kp.textContent = fmt(r.profit, o); kp.className = "v num " + (r.profit >= 0 ? "good" : "bad");
+    const st = $("kStatus");
+    if (r.profit < 0) { st.className = "status neg"; st.textContent = "虧損"; }
+    else if (r.marginReal < 0.1) { st.className = "status low"; st.textContent = "利潤偏低"; }
+    else { st.className = "status ok"; st.textContent = "健康"; }
+    $("kMargin").textContent = (r.marginReal * 100).toFixed(1) + "%";
+    $("kMarkup").textContent = `成本加成 ${(r.markup * 100).toFixed(1)}%`;
+
+    const parts = [
+      ["商品成本", r.item, "var(--seg1)", `${r.c.src}${group(r.s.price)} × ${r.qty}`],
+      ["代購服務費", r.svc, "var(--seg2)", `${num(r.s.svc)}%`],
+      ["運費", r.ship, "var(--seg3)", "國際＋境內"],
+      ["營運雜支", r.ops, "var(--seg4)", `${num(r.s.ops)}%`],
+      ["稅金", r.tax, "var(--seg5)", r.s.tax ? `${r.c.taxRate * 100}% 含於售價` : "未開立"],
+      ["淨利潤", Math.max(r.profit, 0), "var(--seg6)", ""]
+    ];
+    const tot = parts.reduce((a, p) => a + Math.max(p[1], 0), 0) || 1;
+    $("bar").innerHTML = parts.map(p => `<span style="width:${Math.max(p[1], 0) / tot * 100}%;background:${p[2]}"></span>`).join("");
+    const rows = parts.slice(0, 5).map(p => `<li><span class="nm"><i class="dot" style="background:${p[2]}"></i><span>${p[0]} <small>${p[3]}</small></span></span><span class="amt num">${fmt(p[1], o)}</span></li>`);
+    rows.push(`<li><span class="nm"><i class="dot" style="background:var(--seg6)"></i><span>淨利潤</span></span><span class="amt num ${r.profit >= 0 ? "good" : "bad"}">${fmt(r.profit, o)}</span></li>`);
+    rows.push(`<li class="total"><span>總成本（不含稅）</span><span class="num">${fmt(r.cost, o)}</span></li>`);
+    $("rows").innerHTML = rows.join("");
+    $("perUnit").textContent = r.qty > 1 ? `每件成本 ${fmt(r.cost / r.qty, o)}` : "";
+    $("quoteText").value = quoteText(r);
+
+    $("mK").textContent = r.customOn ? "你的報價" : "建議售價";
+    $("mP").textContent = fmt(r.price, o);
+    const mp = $("mProfit"); mp.textContent = `淨利 ${fmt(r.profit, o)} · ${(r.marginReal * 100).toFixed(0)}%`;
+    mp.className = "pf num " + (r.profit >= 0 ? "good" : "bad");
+    $$("#marginChips .chip").forEach(ch => ch.setAttribute("aria-pressed", num(r.s.margin) === +ch.dataset.m));
+    store.set("dg.state", state); store.set("dg.dir", dir);
+  }
+
+  [...NUMF, ...TEXTF].forEach(f => {
+    const el = $(f);
+    el.addEventListener("input", () => { state[dir][f] = TEXTF.includes(f) ? el.value : el.value.replace(/,/g, ""); render(); });
+    if (MONEY.includes(f)) {
+      el.addEventListener("blur", () => el.value = group(state[dir][f]));
+      el.addEventListener("focus", () => { el.value = String(state[dir][f]); setTimeout(() => el.select(), 0); });
+    } else if (NUMF.includes(f)) el.addEventListener("focus", () => setTimeout(() => el.select(), 0));
+  });
+  $("rate").addEventListener("input", e => { state.rate = e.target.value; render(); renderRate(); });
+  $("round").addEventListener("change", e => { state[dir].round = e.target.value; render(); });
+  $("tax").addEventListener("change", e => { state[dir].tax = e.target.checked; render(); });
+  $$("[data-step]").forEach(b => b.addEventListener("click", () => { state[dir].qty = Math.max(1, Math.round(num(state[dir].qty)) + +b.dataset.step); syncInputs(); render(); }));
+  $$("#marginChips .chip").forEach(ch => ch.addEventListener("click", () => { state[dir].margin = +ch.dataset.m; syncInputs(); render(); }));
+  $$(".dirseg button").forEach(b => b.addEventListener("click", () => { dir = b.dataset.dir; presetActive = ""; syncInputs(); renderPresets(); render(); }));
+  $("toQuote").addEventListener("click", () => $("quote").scrollIntoView({ behavior: "smooth", block: "start" }));
+
+  function copyText(t, ta){
+    const fallback = () => { if (ta) { ta.focus(); ta.select(); } toast("已選取文字，請按複製（⌘/Ctrl＋C）"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast("已複製報價文字"), fallback);
+    else fallback();
+  }
+  $("copyBtn").addEventListener("click", () => copyText($("quoteText").value, $("quoteText")));
+
+  // ---------- save to history ----------
+  $("saveBtn").addEventListener("click", () => {
+    const r = calc(), s = state[dir];
+    if (!String(s.name).trim()) { $("name").focus(); $("name").scrollIntoView({ block: "center", behavior: "smooth" }); toast("先填商品名稱，之後比較好找"); return; }
+    history.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: Date.now(), dir, rate: num(state.rate),
+      inputs: JSON.parse(JSON.stringify(s)), price: r.price, profit: r.profit, margin: r.marginReal, cur: r.c.out, text: quoteText(r) });
+    store.set("dg.history", history);
+    toast(`已存到紀錄：${s.name}`, "查看", () => location.hash = "history");
+  });
+
+  // ---------- presets ----------
+  function renderPresets(){
+    const list = presets.filter(p => p.dir === dir);
+    $("pempty").hidden = list.length > 0; $("plist").hidden = !list.length;
+    $("plist").innerHTML = list.map(p => `<span class="pchip"><button type="button" class="load" data-id="${p.id}">${esc(p.name)}<small>${p.v.svc}% · ${p.v.margin}%</small></button><button type="button" class="del" data-del="${p.id}" aria-label="刪除 ${esc(p.name)}">×</button></span>`).join("");
+  }
+  $("presetForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = $("presetName").value.trim();
+    if (!name) { $("presetName").focus(); toast("請先輸入設定名稱"); return; }
+    const s = state[dir];
+    const v = { ship1: s.ship1, ship2: s.ship2, svc: s.svc, ops: s.ops, margin: s.margin, round: s.round, tax: s.tax };
+    const ex = presets.find(p => p.dir === dir && p.name === name);
+    if (ex) ex.v = v; else presets.push({ id: Date.now().toString(36), dir, name, v });
+    store.set("dg.presets", presets); $("presetName").value = ""; presetActive = name;
+    renderPresets(); toast(ex ? `已更新「${name}」` : `已儲存「${name}」`);
+  });
+  $("plist").addEventListener("click", e => {
+    const ld = e.target.closest("[data-id]"), dl = e.target.closest("[data-del]");
+    if (ld) { const p = presets.find(x => x.id === ld.dataset.id); Object.assign(state[dir], p.v); presetActive = p.name; syncInputs(); render(); toast(`已套用「${p.name}」`); }
+    if (dl) {
+      const i = presets.findIndex(x => x.id === dl.dataset.del); const [gone] = presets.splice(i, 1);
+      store.set("dg.presets", presets); renderPresets();
+      toast(`已刪除「${gone.name}」`, "復原", () => { presets.splice(i, 0, gone); store.set("dg.presets", presets); renderPresets(); });
+    }
+  });
+
+  // ---------- history view ----------
+  let hfilter = "all";
+  function toTWD(h, v){ return h.cur === "NT$" ? v : v / (h.rate || 1); }
+  function renderHistory(){
+    const q = $("hq").value.trim().toLowerCase();
+    const list = history.filter(h => (hfilter === "all" || h.dir === hfilter) &&
+      (!q || (h.inputs.name + " " + h.inputs.customer).toLowerCase().includes(q)));
+    $("sCount").textContent = list.length;
+    $("sTotal").textContent = fmt(list.reduce((a, h) => a + toTWD(h, h.price), 0), "NT$");
+    $("sProfit").textContent = fmt(list.reduce((a, h) => a + toTWD(h, h.profit), 0), "NT$");
+    $("hempty").hidden = list.length > 0;
+    $("hempty").textContent = history.length ? "沒有符合條件的紀錄。" : "還沒有報價紀錄。在「計算」頁按「存到紀錄」，報價就會出現在這裡。";
+    $("hlist").innerHTML = list.map(h => {
+      const d = new Date(h.at);
+      return `<article class="hitem">
+        <div class="t"><div style="min-width:0"><h3>${esc(h.inputs.name || "未命名商品")}</h3>
+          <div class="meta">${d.toLocaleDateString("zh-TW")} ${d.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}${h.inputs.customer ? " · " + esc(h.inputs.customer) : ""}</div></div>
+          <span class="tag">${CFG[h.dir].short}</span></div>
+        <div class="t"><div><div class="p num">${fmt(h.price, h.cur)}</div><div class="meta num">原價 ${CFG[h.dir].src}${group(h.inputs.price)} × ${h.inputs.qty} · 匯率 ${h.rate}</div></div>
+          <div style="text-align:right"><div class="num ${h.profit >= 0 ? "good" : "bad"}" style="font-weight:700">${fmt(h.profit, h.cur)}</div><div class="meta">淨利 ${(h.margin * 100).toFixed(1)}%</div></div></div>
+        <div class="b"><button type="button" class="btn sm btn-pri" data-load="${h.id}">載入</button><button type="button" class="btn sm btn-line" data-copy="${h.id}">複製</button><button type="button" class="btn sm btn-danger" data-hdel="${h.id}" aria-label="刪除這筆">刪除</button></div>
+      </article>`; }).join("");
+  }
+  $("hq").addEventListener("input", renderHistory);
+  $$("#hfilter button").forEach(b => b.addEventListener("click", () => { hfilter = b.dataset.f; $$("#hfilter button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderHistory(); }));
+  $("hlist").addEventListener("click", e => {
+    const t = e.target.closest("button"); if (!t) return;
+    const find = id => history.findIndex(h => h.id === id);
+    if (t.dataset.load) {
+      const h = history[find(t.dataset.load)];
+      dir = h.dir; state[dir] = Object.assign({}, DEFAULTS[dir], h.inputs);
+      syncInputs(); renderPresets(); render(); location.hash = "calc";
+      toast(`已載入「${h.inputs.name}」，目前使用今天的匯率重算`);
+    }
+    if (t.dataset.copy) copyText(history[find(t.dataset.copy)].text);
+    if (t.dataset.hdel) {
+      const i = find(t.dataset.hdel); const [gone] = history.splice(i, 1);
+      store.set("dg.history", history); renderHistory();
+      toast(`已刪除「${gone.inputs.name}」`, "復原", () => { history.splice(i, 0, gone); store.set("dg.history", history); renderHistory(); });
+    }
+  });
+
+  function download(name, text, type){
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type }));
+      const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast(`已下載 ${name}`);
+    } catch { toast("這個環境不允許下載檔案，請在安裝的 App 或瀏覽器中使用"); }
+  }
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  $("csvBtn").addEventListener("click", () => {
+    if (!history.length) { toast("還沒有紀錄可以匯出"); return; }
+    const q = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [["日期","方向","商品","客人","原價","數量","匯率","售價","幣別","淨利","利潤率"].join(",")].concat(
+      history.map(h => [new Date(h.at).toLocaleString("zh-TW"), CFG[h.dir].short, h.inputs.name, h.inputs.customer, h.inputs.price, h.inputs.qty, h.rate, Math.round(h.price), h.cur, Math.round(h.profit), (h.margin * 100).toFixed(1) + "%"].map(q).join(",")));
+    download(`代購報價紀錄-${stamp()}.csv`, "﻿" + lines.join("\n"), "text/csv;charset=utf-8");
+  });
+
+  // ---------- backup / restore / wipe ----------
+  $("backupBtn").addEventListener("click", () => download(`代購報價備份-${stamp()}.json`, JSON.stringify({ app: "daigou-quote", version: VERSION, state, presets, history }, null, 1), "application/json"));
+  $("restoreFile").addEventListener("change", e => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (d.app !== "daigou-quote") throw 0;
+        const ids = new Set(history.map(h => h.id));
+        const addH = (d.history || []).filter(h => h && h.id && !ids.has(h.id));
+        history = history.concat(addH).sort((a, b) => b.at - a.at);
+        const pk = new Set(presets.map(p => p.dir + p.name));
+        const addP = (d.presets || []).filter(p => p && !pk.has(p.dir + p.name));
+        presets = presets.concat(addP);
+        store.set("dg.history", history); store.set("dg.presets", presets);
+        renderPresets(); toast(`已還原：新增 ${addH.length} 筆紀錄、${addP.length} 組設定`);
+      } catch { toast("這不是代購報價的備份檔，請重新選擇"); }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  });
+  let wipeArmed = 0;
+  $("wipeBtn").addEventListener("click", () => {
+    if (Date.now() - wipeArmed > 4000) { wipeArmed = Date.now(); $("wipeBtn").textContent = "再按一次確認"; setTimeout(() => $("wipeBtn").textContent = "清除", 4000); return; }
+    ["dg.state","dg.dir","dg.presets","dg.history","dg.live","dg.theme"].forEach(store.del);
+    location.hash = "calc"; location.reload();
+  });
+
+  // ---------- live exchange rate (average of public sources) ----------
+  const SOURCES = [
+    { name: "ExchangeRate-API", urls: ["https://open.er-api.com/v6/latest/TWD"],
+      parse: d => ({ v: d.rates && d.rates.KRW, t: d.time_last_update_unix ? d.time_last_update_unix * 1000 : null }) },
+    { name: "Currency API（開源）", urls: ["https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/twd.min.json", "https://latest.currency-api.pages.dev/v1/currencies/twd.min.json"],
+      parse: d => ({ v: d.twd && d.twd.krw, t: d.date ? Date.parse(d.date) : null }) },
+    { name: "FloatRates", urls: ["https://www.floatrates.com/daily/twd.json"],
+      parse: d => ({ v: d.krw && d.krw.rate, t: d.krw && d.krw.date ? Date.parse(d.krw.date) : null }) }
+  ];
+  let live = store.get("dg.live", null);
+  if (live) live.fresh = false;
+  async function getJSON(url){
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 7000);
+    try { const r = await fetch(url, { signal: ctl.signal, cache: "no-store" }); if (!r.ok) throw new Error(r.status); return await r.json(); }
+    finally { clearTimeout(tm); }
+  }
+  async function fetchSource(s){
+    for (const u of s.urls) { try { const p = s.parse(await getJSON(u)); if (p.v > 0) return { name: s.name, v: +p.v, t: p.t }; } catch {} }
+    return { name: s.name, v: null, t: null };
+  }
+  let fetching = false;
+  async function refreshRate(silent){
+    if (fetching) return; fetching = true;
+    $("rateStatus").className = "pill"; $("rateStatus").textContent = "抓取中…"; $("rateRefresh").disabled = true;
+    const list = await Promise.all(SOURCES.map(fetchSource));
+    const ok = list.filter(x => x.v);
+    if (ok.length) {
+      const s = ok.map(x => x.v).sort((a, b) => a - b);
+      const med = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+      list.forEach(x => x.used = !!x.v && Math.abs(x.v - med) / med <= 0.03);
+      const used = list.filter(x => x.used);
+      live = { avg: Math.round(used.reduce((a, x) => a + x.v, 0) / used.length * 10000) / 10000, at: Date.now(), list, fresh: true };
+      store.set("dg.live", { ...live, fresh: false });
+    } else if (live) live.fresh = false;
+    fetching = false; $("rateRefresh").disabled = false;
+    applyLive(); syncInputs(); render();
+    if (!ok.length && !silent) toast(live ? "目前無法連線，先使用上次抓到的匯率" : "無法取得線上匯率，請手動輸入");
+  }
+  function applyLive(){
+    if (state.rateMode === "auto") { if (live && live.avg) state.rate = live.avg; else state.rateMode = "manual"; }
+    renderRate();
+  }
+  const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); if (m < 1) return "剛剛"; if (m < 60) return m + " 分鐘前"; const h = Math.round(m / 60); if (h < 48) return h + " 小時前"; return Math.round(h / 24) + " 天前"; };
+  function renderRate(){
+    const st = $("rateStatus"), auto = state.rateMode === "auto";
+    $("manualBox").hidden = auto;
+    $("rateModeBtn").textContent = auto ? "手動輸入" : "改回自動";
+    $("rateModeBtn").disabled = !auto && !live;
+    if (!auto) { st.className = "pill"; st.textContent = "手動匯率"; }
+    else if (live && live.fresh) { st.className = "pill live"; st.textContent = "● 即時平均"; }
+    else if (live) { st.className = "pill stale"; st.textContent = "離線 · 上次匯率"; }
+    const used = live ? live.list.filter(x => x.used).length : 0;
+    $("rateMeta").textContent = live ? (auto ? `${used} 個公開來源平均 · ${ago(live.at)}更新` : `參考：線上平均 ₩${live.avg}（${ago(live.at)}）`) : "尚未取得線上匯率";
+    $("srcList").innerHTML = live ? live.list.map(x =>
+      `<li class="${x.v && !x.used ? "off" : ""}"><span>${x.name} <small>${x.t ? new Date(x.t).toLocaleDateString("zh-TW") : ""}${x.v && !x.used ? "（偏離過大，未採用）" : ""}</small></span><span class="num">${x.v ? "₩" + (+x.v).toFixed(4) : "<small>無法連線</small>"}</span></li>`).join("")
+      + `<li><b>平均</b><b class="num">₩${live.avg}</b></li>` : "<li><small>尚無資料</small></li>";
+  }
+  $("rateRefresh").addEventListener("click", () => { state.rateMode = "auto"; refreshRate(); });
+  $("rateModeBtn").addEventListener("click", () => {
+    if (state.rateMode === "auto") { state.rateMode = "manual"; renderRate(); $("rate").value = state.rate; $("rate").focus(); }
+    else if (live) { state.rateMode = "auto"; applyLive(); syncInputs(); render(); }
+  });
+  // refresh again when the app comes back to the foreground after 30+ minutes
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && state.rateMode === "auto" && (!live || Date.now() - live.at > 30 * 60000)) refreshRate(true);
+  });
+
+  // ---------- install (PWA) ----------
+  const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let deferred = null;
+  function renderInstall(){
+    const done = isStandalone();
+    $("instState").textContent = done ? "已安裝" : "未安裝";
+    $("instState").className = "pill" + (done ? " live" : "");
+    $("instDone").hidden = !done;
+    $("instAuto").hidden = done || !deferred;
+    $("instIOS").hidden = done || deferred || !isIOS;
+    $("instManual").hidden = done || deferred || isIOS;
+    $("installBanner").hidden = done || !deferred || store.get("dg.bannerOff", 0) > Date.now();
+  }
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; renderInstall(); });
+  window.addEventListener("appinstalled", () => { deferred = null; renderInstall(); toast("已安裝，之後可從主畫面開啟"); });
+  $$("[data-install]").forEach(b => b.addEventListener("click", async () => {
+    if (!deferred) { location.hash = "prefs"; return; }
+    deferred.prompt(); try { await deferred.userChoice; } catch {} deferred = null; renderInstall();
+  }));
+  $("bannerClose").addEventListener("click", () => { store.set("dg.bannerOff", Date.now() + 14 * 864e5); renderInstall(); });
+
+  // ---------- service worker (offline + updates) ----------
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
+      const offer = w => toast("有新版本可用", "重新整理", () => w.postMessage("skipWaiting"), 15000);
+      if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+      reg.addEventListener("updatefound", () => {
+        const w = reg.installing;
+        w && w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) offer(w); });
+      });
+    }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloaded) { reloaded = true; location.reload(); } });
+  }
+
+  // ---------- toast ----------
+  let tt;
+  function toast(msg, actLabel, act, ms){
+    $("toastMsg").textContent = msg; $("toast").hidden = false;
+    const a = $("toastAct"); a.hidden = !act; a.textContent = actLabel || "";
+    a.onclick = () => { act && act(); $("toast").hidden = true; };
+    clearTimeout(tt); tt = setTimeout(() => $("toast").hidden = true, ms || (act ? 5000 : 2400));
+  }
+
+  // ---------- boot ----------
+  state.rateMode = "auto";            // every launch fetches the latest average
+  applyLive(); syncInputs(); renderPresets(); render(); renderInstall(); route();
+  state.rateMode = "auto";
+  refreshRate();
+})();
+</script>
+</body>
+</html>
